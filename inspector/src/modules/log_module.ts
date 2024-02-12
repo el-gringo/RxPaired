@@ -374,7 +374,7 @@ export default function LogModule({
    * @param {string} updateType
    * @param {Array.<string>|undefined} values
    * @param {boolean} [keepScrollPosition] - If `true`, the current scroll
-   * position relative to the bottom of the log module's content will be kept.
+   * position in term of percentage will be kept as is.
    */
   function onLogsHistoryChange(
     updateType: UPDATE_TYPE | "initial",
@@ -382,7 +382,7 @@ export default function LogModule({
     keepScrollPosition?: boolean,
   ) {
     let scrollPercent: number | undefined;
-    if (keepScrollPosition === true) {
+    if (keepScrollPosition === true && !isLogBodyScrolledToBottom()) {
       scrollPercent =
         logBodyElt.scrollTop /
         (logBodyElt.scrollHeight - logBodyElt.clientHeight);
