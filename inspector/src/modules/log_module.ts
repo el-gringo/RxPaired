@@ -105,7 +105,11 @@ export default function LogModule({
       minimumDateInputElt.style.display = "none";
       maximumDateInputElt.style.display = "none";
     }
-    reloadLogsHistory();
+    onLogsHistoryChange(
+      UPDATE_TYPE.REPLACE,
+      logView.getCurrentState(STATE_PROPS.LOGS_HISTORY),
+      true,
+    );
   };
   onDestroyFns.push(
     configState.subscribe(
@@ -362,21 +366,25 @@ export default function LogModule({
     return "no-log";
   }
 
-  function reloadLogsHistory() {
-    onLogsHistoryChange(
-      UPDATE_TYPE.REPLACE,
-      logView.getCurrentState(STATE_PROPS.LOGS_HISTORY),
-    );
-  }
   /**
    * Callback triggered when the global history of logs changes.
    * @param {string} updateType
    * @param {Array.<string>|undefined} values
+   * @param {boolean} [keepScrollPosition] - If `true`, the current scroll
+   * position relative to the bottom of the log module's content will be kept.
    */
   function onLogsHistoryChange(
     updateType: UPDATE_TYPE | "initial",
     values: Array<[string, number]> | undefined,
+    keepScrollPosition?: boolean
   ) {
+    let scrollFromBottom: number | undefined;
+    if (keepScrollPosition === true) {
+      scrollFromBottom =
+        logBodyElt.scrollHeight -
+        logBodyElt.clientHeight -
+        logBodyElt.scrollTop;
+    }
     if (values === undefined) {
       if (timeoutInterval !== undefined) {
         clearTimeout(timeoutInterval);
@@ -410,7 +418,7 @@ export default function LogModule({
       const filter = createFilterFunction();
       filtered = values.filter(([str]) => filter(str));
     }
-    displayNewLogs(filtered, isResetting);
+    displayNewLogs(filtered, isResetting, scrollFromBottom);
   }
 
   /**
@@ -458,10 +466,13 @@ export default function LogModule({
    * (as focus is usually set on the last logs which would there have been added
    * at the beginning of the call) but can only worker when re-initializing
    * logs. This can e.g. be set when setting a filter or when post-debugging.
+   * @param {number|undefined} scrollFromBottom - If set, the number of pixel
+   * from the absolute bottom of the log module's content we should scroll to.
    */
   function displayNewLogs(
     newLogs: Array<[string, number]>,
     isResetting: boolean,
+    scrollFromBottom: number | undefined,
   ): void {
     if (isResetting && timeoutInterval !== undefined) {
       clearTimeout(timeoutInterval);
@@ -482,7 +493,7 @@ export default function LogModule({
         displayLoadingHeader();
         timeoutInterval = setTimeout(() => {
           timeoutInterval = undefined;
-          displayNewLogs(nextIterationLogs, isResetting);
+          displayNewLogs(nextIterationLogs, isResetting, scrollFromBottom);
         }, 50);
       }
       logsToDisplay = logsToDisplay.slice(logsToDisplay.length - 500);
@@ -546,7 +557,10 @@ export default function LogModule({
     if (logContainerElt.parentElement !== logBodyElt) {
       logBodyElt.appendChild(logContainerElt);
     }
-    if (wasScrolledToBottom) {
+    if (scrollFromBottom !== undefined) {
+      logBodyElt.scrollTop =
+        logBodyElt.scrollHeight - logBodyElt.clientHeight - scrollFromBottom;
+    } else if (wasScrolledToBottom) {
       logBodyElt.scrollTop = logBodyElt.scrollHeight;
     }
   }
@@ -639,6 +653,7 @@ export default function LogModule({
     onLogsHistoryChange(
       "initial",
       logView.getCurrentState(STATE_PROPS.LOGS_HISTORY) ?? [],
+      true,
     );
   }
 
@@ -715,6 +730,7 @@ export default function LogModule({
     onLogsHistoryChange(
       "initial",
       logView.getCurrentState(STATE_PROPS.LOGS_HISTORY) ?? [],
+      true,
     );
   }
 
