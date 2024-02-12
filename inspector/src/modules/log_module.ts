@@ -376,14 +376,13 @@ export default function LogModule({
   function onLogsHistoryChange(
     updateType: UPDATE_TYPE | "initial",
     values: Array<[string, number]> | undefined,
-    keepScrollPosition?: boolean
+    keepScrollPosition?: boolean,
   ) {
-    let scrollFromBottom: number | undefined;
+    let scrollPercent: number | undefined;
     if (keepScrollPosition === true) {
-      scrollFromBottom =
-        logBodyElt.scrollHeight -
-        logBodyElt.clientHeight -
-        logBodyElt.scrollTop;
+      scrollPercent =
+        logBodyElt.scrollTop /
+        (logBodyElt.scrollHeight - logBodyElt.clientHeight);
     }
     if (values === undefined) {
       if (timeoutInterval !== undefined) {
@@ -418,7 +417,7 @@ export default function LogModule({
       const filter = createFilterFunction();
       filtered = values.filter(([str]) => filter(str));
     }
-    displayNewLogs(filtered, isResetting, scrollFromBottom);
+    displayNewLogs(filtered, isResetting, scrollPercent);
   }
 
   /**
@@ -466,13 +465,14 @@ export default function LogModule({
    * (as focus is usually set on the last logs which would there have been added
    * at the beginning of the call) but can only worker when re-initializing
    * logs. This can e.g. be set when setting a filter or when post-debugging.
-   * @param {number|undefined} scrollFromBottom - If set, the number of pixel
-   * from the absolute bottom of the log module's content we should scroll to.
+   * @param {number|undefined} scrollPercent - If set, the percentage scroll
+   * position (`0` being at the very top and `1` being at the very bottom) the
+   * scroll position should be maintained at.
    */
   function displayNewLogs(
     newLogs: Array<[string, number]>,
     isResetting: boolean,
-    scrollFromBottom: number | undefined,
+    scrollPercent: number | undefined,
   ): void {
     if (isResetting && timeoutInterval !== undefined) {
       clearTimeout(timeoutInterval);
@@ -493,7 +493,7 @@ export default function LogModule({
         displayLoadingHeader();
         timeoutInterval = setTimeout(() => {
           timeoutInterval = undefined;
-          displayNewLogs(nextIterationLogs, isResetting, scrollFromBottom);
+          displayNewLogs(nextIterationLogs, isResetting, scrollPercent);
         }, 50);
       }
       logsToDisplay = logsToDisplay.slice(logsToDisplay.length - 500);
@@ -557,9 +557,9 @@ export default function LogModule({
     if (logContainerElt.parentElement !== logBodyElt) {
       logBodyElt.appendChild(logContainerElt);
     }
-    if (scrollFromBottom !== undefined) {
+    if (scrollPercent !== undefined) {
       logBodyElt.scrollTop =
-        logBodyElt.scrollHeight - logBodyElt.clientHeight - scrollFromBottom;
+        (logBodyElt.scrollHeight - logBodyElt.clientHeight) * scrollPercent;
     } else if (wasScrolledToBottom) {
       logBodyElt.scrollTop = logBodyElt.scrollHeight;
     }
