@@ -15,6 +15,9 @@ const NO_LOG_SELECTED_MSG =
 const LOG_SELECTED_MSG = "A log has been time-travelled to.";
 const timeRegex = /^(\d+(?:.)?(?:\d+)?) (.*)$/s;
 
+const MAX_LOGS_TO_PUSH_AT_ONCE = 2000;
+const BULK_LOGS_DISPLAY_TIMEOUT = 75;
+
 /**
  * @param {Object} args
  */
@@ -484,19 +487,21 @@ export default function LogModule({
       newLogs.length > maxNbDisplayedLogs
         ? newLogs.slice(maxNbDisplayedLogs)
         : newLogs;
-    if (isResetting && logsToDisplay.length > 500) {
+    if (isResetting && logsToDisplay.length > MAX_LOGS_TO_PUSH_AT_ONCE) {
       const nextIterationLogs = logsToDisplay.slice(
         0,
-        logsToDisplay.length - 500,
+        logsToDisplay.length - MAX_LOGS_TO_PUSH_AT_ONCE,
       );
       if (nextIterationLogs.length > 0) {
         displayLoadingHeader();
         timeoutInterval = setTimeout(() => {
           timeoutInterval = undefined;
           displayNewLogs(nextIterationLogs, isResetting, scrollPercent);
-        }, 50);
+        }, BULK_LOGS_DISPLAY_TIMEOUT);
       }
-      logsToDisplay = logsToDisplay.slice(logsToDisplay.length - 500);
+      logsToDisplay = logsToDisplay.slice(
+        logsToDisplay.length - MAX_LOGS_TO_PUSH_AT_ONCE,
+      );
     }
 
     if (logsToDisplay.length >= 10) {
