@@ -330,7 +330,7 @@ export default function LogModule({
   /** Display header for when a log is currently selected. */
   function displayLogSelectedHeader() {
     logHeaderElt.innerHTML = "";
-    const isSelectedElementOnScreen = getSelectedElement() !== null;
+    const selectedEltInScreen = getSelectedElement();
     const text = strHtml`<span>${LOG_SELECTED_MSG}</span>`;
     text.style.marginLeft = "5px";
     logHeaderElt.appendChild(text);
@@ -354,7 +354,58 @@ export default function LogModule({
     logHeaderElt.appendChild(strHtml`<br>`);
     logHeaderElt.appendChild(unselectSpan);
 
-    if (isSelectedElementOnScreen) {
+    const selectedLogId = logView.getCurrentState(STATE_PROPS.SELECTED_LOG_ID);
+    if (selectedLogId !== undefined) {
+      const logs = logView.getCurrentState(STATE_PROPS.LOGS_HISTORY);
+      const log = logs?.find((l) => l[1] === selectedLogId);
+      if (log !== undefined) {
+        const match = log[0].match(timeRegex);
+        if (match !== null) {
+          const timestamp = Number(match[1]);
+          let displayedTimestamp: number | string = timestamp;
+          if (
+            configState.getCurrentState(STATE_PROPS.TIME_REPRESENTATION) ===
+            "date"
+          ) {
+            const dateAtPageLoad =
+              logView.getCurrentState(STATE_PROPS.DATE_AT_PAGE_LOAD) ?? 0;
+            const dateNum = Number(match[1]) + dateAtPageLoad;
+            displayedTimestamp = convertDateToLocalISOString(new Date(dateNum));
+          }
+          const goToMinimumTimeSpan = strHtml`<span class="emphasized">Minimum time</span>`;
+          const goToMaximumTimeSpan = strHtml`<span class="emphasized">Maximum time</span>`;
+          const dateNavigationSpan = strHtml`<span>${[
+            `Set date (${displayedTimestamp}) as: `,
+            goToMinimumTimeSpan,
+            " / ",
+            goToMaximumTimeSpan,
+          ]}</span>`;
+          goToMinimumTimeSpan.style.cursor = "pointer";
+          goToMaximumTimeSpan.style.cursor = "pointer";
+          dateNavigationSpan.style.marginLeft = "5px";
+          goToMinimumTimeSpan.onclick = () => {
+            logView.updateState(
+              STATE_PROPS.LOG_MIN_TIMESTAMP_DISPLAYED,
+              UPDATE_TYPE.REPLACE,
+              timestamp,
+            );
+            logView.commitUpdates();
+          };
+          goToMaximumTimeSpan.onclick = () => {
+            logView.updateState(
+              STATE_PROPS.LOG_MAX_TIMESTAMP_DISPLAYED,
+              UPDATE_TYPE.REPLACE,
+              timestamp,
+            );
+            logView.commitUpdates();
+          };
+          logHeaderElt.appendChild(strHtml`<br>`);
+          logHeaderElt.appendChild(dateNavigationSpan);
+        }
+      }
+    }
+
+    if (selectedEltInScreen !== null) {
       const scrollIntoViewSpan = strHtml`<span class="emphasized">Scroll into view</span>`;
       scrollIntoViewSpan.style.cursor = "pointer";
       scrollIntoViewSpan.style.marginLeft = "5px";
