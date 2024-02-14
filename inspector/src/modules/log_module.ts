@@ -53,6 +53,7 @@ export default function LogModule({
    */
   const logHeaderElt = strHtml`<div class="log-header"/>`;
   logHeaderElt.style.borderBottom = "1px dashed #878787";
+  logHeaderElt.style.lineHeight = "1.3em";
   displayNoLogHeader();
 
   /** Wrapper elements which will contain log messages. */
@@ -328,11 +329,15 @@ export default function LogModule({
 
   /** Display header for when a log is currently selected. */
   function displayLogSelectedHeader() {
-    logHeaderElt.textContent = LOG_SELECTED_MSG;
-    const clickSpan = strHtml`<span class="emphasized">${[
+    logHeaderElt.innerHTML = "";
+    const isSelectedElementOnScreen = getSelectedElement() !== null;
+    const text = strHtml`<span>${LOG_SELECTED_MSG}</span>`;
+    text.style.marginLeft = "5px";
+    logHeaderElt.appendChild(text);
+    const unselectSpan = strHtml`<span class="emphasized">${[
       "Click on the log again or here to unselect",
     ]}</span>`;
-    clickSpan.onclick = function () {
+    unselectSpan.onclick = function () {
       logView.updateState(
         STATE_PROPS.SELECTED_LOG_ID,
         UPDATE_TYPE.REPLACE,
@@ -344,9 +349,21 @@ export default function LogModule({
         selectedElt = null;
       }
     };
-    clickSpan.style.cursor = "pointer";
-    clickSpan.style.marginLeft = "5px";
-    logHeaderElt.appendChild(clickSpan);
+    unselectSpan.style.cursor = "pointer";
+    unselectSpan.style.marginLeft = "5px";
+    logHeaderElt.appendChild(strHtml`<br>`);
+    logHeaderElt.appendChild(unselectSpan);
+
+    if (isSelectedElementOnScreen) {
+      const scrollIntoViewSpan = strHtml`<span class="emphasized">Scroll into view</span>`;
+      scrollIntoViewSpan.style.cursor = "pointer";
+      scrollIntoViewSpan.style.marginLeft = "5px";
+      logHeaderElt.appendChild(strHtml`<br>`);
+      logHeaderElt.appendChild(scrollIntoViewSpan);
+      scrollIntoViewSpan.onclick = function () {
+        focusSelectedIntoView();
+      };
+    }
     logHeaderElt.classList.add("important-bg");
   }
 
@@ -440,9 +457,7 @@ export default function LogModule({
     }
 
     if (hasLogSelected) {
-      if (headerType !== "selected") {
-        displayLogSelectedHeader();
-      }
+      displayLogSelectedHeader();
     } else if (timeoutInterval !== undefined) {
       if (headerType !== "loading") {
         displayLoadingHeader();
@@ -544,6 +559,10 @@ export default function LogModule({
       }
     }
 
+    if (logContainerElt.parentElement !== logBodyElt) {
+      logBodyElt.appendChild(logContainerElt);
+    }
+
     if (timeoutInterval === undefined) {
       const headerType = getHeaderType();
       if (selectedElt === null && logContainerElt.childNodes.length === 0) {
@@ -554,19 +573,33 @@ export default function LogModule({
         if (headerType !== "no-selected") {
           displayNoLogSelectedHeader();
         }
-      } else if (headerType !== "selected") {
+      } else {
         displayLogSelectedHeader();
       }
     }
 
-    if (logContainerElt.parentElement !== logBodyElt) {
-      logBodyElt.appendChild(logContainerElt);
-    }
     if (scrollPercent !== undefined) {
       logBodyElt.scrollTop =
         (logBodyElt.scrollHeight - logBodyElt.clientHeight) * scrollPercent;
     } else if (wasScrolledToBottom) {
       logBodyElt.scrollTop = logBodyElt.scrollHeight;
+    }
+  }
+
+  function getSelectedElement(): HTMLElement | null {
+    const focused = logBodyElt.getElementsByClassName("focused-bg")[0];
+    return focused !== undefined &&
+      focused instanceof HTMLElement &&
+      focused.parentElement !== null
+      ? focused
+      : null;
+  }
+
+  function focusSelectedIntoView() {
+    const focused = getSelectedElement();
+    if (focused !== null && focused.parentElement !== null) {
+      logBodyElt.scrollTop =
+        focused.offsetTop - focused.parentElement.offsetTop;
     }
   }
 
