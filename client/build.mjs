@@ -7,77 +7,95 @@ import { fileURLToPath } from "url";
 
 const currentDirName = getCurrentDirectoryName();
 
-if (typeof process.env.npm_config_device_debugger_url !== "string") {
-  console.error(
-    "Error: Invalid environment variable(s)." +
-      "\n" +
-      "Please make sure that you:\n" +
-      `  1. Declared an ".npmrc" file in the "${currentDirName}" directory based on ` +
-      "the content of the following file: " +
-      path.join(currentDirName, ".npmrc.sample") +
-      ".\n" +
-      "  2. Called this script through an npm script command (e.g. npm run *script*).",
-  );
-  process.exit(1);
-}
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  // The script has been run directly
 
-let deviceDebuggerUrl = process.env.npm_config_device_debugger_url;
-if (!/^(http|ws)s?:\/\//.test(deviceDebuggerUrl)) {
-  console.error(
-    "Error: Invalid device_debugger_url." +
-      "\n" +
-      "Please make sure that this url uses either the http, https, ws or wss.",
-  );
-  process.exit(1);
-}
-if (deviceDebuggerUrl.startsWith("http")) {
-  deviceDebuggerUrl = "ws" + deviceDebuggerUrl.slice(4);
-}
+  if (typeof process.env.npm_config_device_debugger_url !== "string") {
+    console.error(
+      "Error: Invalid environment variable(s)." +
+        "\n" +
+        "Please make sure that you:\n" +
+        `  1. Declared an ".npmrc" file in the "${currentDirName}" directory based on ` +
+        "the content of the following file: " +
+        path.join(currentDirName, ".npmrc.sample") +
+        ".\n" +
+        "  2. Called this script through an npm script command (e.g. npm run *script*).",
+    );
+    process.exit(1);
+  }
 
-const { argv } = process;
-if (argv.includes("-h") || argv.includes("--help")) {
-  displayHelp();
-  process.exit(0);
-}
-const shouldWatch = argv.includes("-w") || argv.includes("--watch");
-const shouldMinify = argv.includes("-m") || argv.includes("--minify");
+  let deviceDebuggerUrl = process.env.npm_config_device_debugger_url;
+  if (!/^(http|ws)s?:\/\//.test(deviceDebuggerUrl)) {
+    console.error(
+      "Error: Invalid device_debugger_url." +
+        "\n" +
+        "Please make sure that this url uses either the http, https, ws or wss.",
+    );
+    process.exit(1);
+  }
+  if (deviceDebuggerUrl.startsWith("http")) {
+    deviceDebuggerUrl = "ws" + deviceDebuggerUrl.slice(4);
+  }
 
-const consolePlugin = {
-  name: "onEnd",
-  setup(build) {
-    build.onStart(() => {
-      console.log(
-        `\x1b[33m[${getHumanReadableHours()}]\x1b[0m ` +
-          "New client build started",
-      );
-    });
-    build.onEnd((result) => {
-      if (result.errors.length > 0 || result.warnings.length > 0) {
-        const { errors, warnings } = result;
+  const { argv } = process;
+  if (argv.includes("-h") || argv.includes("--help")) {
+    displayHelp();
+    process.exit(0);
+  }
+  const shouldWatch = argv.includes("-w") || argv.includes("--watch");
+  const shouldMinify = argv.includes("-m") || argv.includes("--minify");
+
+  const consolePlugin = {
+    name: "onEnd",
+    setup(build) {
+      build.onStart(() => {
         console.log(
           `\x1b[33m[${getHumanReadableHours()}]\x1b[0m ` +
-            `client re-built with ${errors.length} error(s) and ` +
-            ` ${warnings.length} warning(s) `,
+            "New client build started",
         );
-        return;
-      }
-      console.log(
-        `\x1b[32m[${getHumanReadableHours()}]\x1b[0m ` + "client built!",
-      );
-    });
-  },
-};
-
-buildClient({ minify: shouldMinify, watch: shouldWatch });
+      });
+      build.onEnd((result) => {
+        if (result.errors.length > 0 || result.warnings.length > 0) {
+          const { errors, warnings } = result;
+          console.log(
+            `\x1b[33m[${getHumanReadableHours()}]\x1b[0m ` +
+              `client re-built with ${errors.length} error(s) and ` +
+              ` ${warnings.length} warning(s) `,
+          );
+          return;
+        }
+        console.log(
+          `\x1b[32m[${getHumanReadableHours()}]\x1b[0m ` + "client built!",
+        );
+      });
+    },
+  };
+  buildClient({
+    minify: shouldMinify,
+    watch: shouldWatch,
+    plugins: [consolePlugin],
+    deviceDebuggerUrl,
+  }).catch((err) => {
+    console.error(
+      `\x1b[31m[${getHumanReadableHours()}]\x1b[0m Client build failed:`,
+      err,
+    );
+    process.exit(1);
+  });
+}
 
 /**
  * Build the client with the given options.
  * @param {Object} options
+ * @param {string} options.deviceDebuggerUrl - URL to contact the RxPaired
+ * server.
  * @param {boolean} [options.minify] - If `true`, the output will be minified.
  * @param {boolean} [options.watch] - If `true`, the files involved
  * will be watched and the code re-built each time one of them changes.
+ * @param {Array|undefined} [plugins]
+ * @returns {Promise}
  */
-function buildClient(options) {
+export default function buildClient(options) {
   const minify = !!options.minify;
   const watch = !!options.watch;
   const esbuildOpts = {
@@ -86,23 +104,16 @@ function buildClient(options) {
     minifySyntax: minify,
     target: "es6",
     outfile: path.join(currentDirName, "client.js"),
-    plugins: [consolePlugin],
+    plugins: options.plugins,
     define: {
-      _DEVICE_DEBUGGER_URL_: JSON.stringify(deviceDebuggerUrl),
+      _DEVICE_DEBUGGER_URL_: JSON.stringify(options.deviceDebuggerUrl),
     },
   };
-  let prom = watch
+  return watch
     ? esbuild.context(esbuildOpts).then((context) => {
         context.watch();
       })
     : esbuild.build(esbuildOpts);
-  prom.catch((err) => {
-    console.error(
-      `\x1b[31m[${getHumanReadableHours()}]\x1b[0m Client build failed:`,
-      err,
-    );
-    process.exit(1);
-  });
 }
 
 /**

@@ -1,16 +1,17 @@
+import {
+  DEFAULT_INSPECTOR_PORT,
+  DEFAULT_DEVICE_PORT,
+  DEFAULT_HISTORY_SIZE,
+  DEFAULT_MAX_TOKEN_DURATION,
+  DEFAULT_MAX_LOG_LENGTH,
+  DEFAULT_WRONG_PASSWORD_LIMIT,
+  DEFAULT_DEVICE_CONNECTION_LIMIT,
+  DEFAULT_INSPECTOR_CONNECTION_LIMIT,
+  DEFAULT_DEVICE_MESSAGE_LIMIT,
+  DEFAULT_INSPECTOR_MESSAGE_LIMIT,
+  DEFAULT_LOG_FILE_PATH,
+} from "./constants.js";
 import { generatePassword } from "./utils.js";
-
-const DEFAULT_INSPECTOR_PORT = 22625;
-const DEFAULT_DEVICE_PORT = 22626;
-const DEFAULT_HISTORY_SIZE = 0;
-const DEFAULT_MAX_TOKEN_DURATION = 4 * 60 * 60 * 1000;
-const DEFAULT_MAX_LOG_LENGTH = 3000;
-const DEFAULT_WRONG_PASSWORD_LIMIT = 50;
-const DEFAULT_DEVICE_CONNECTION_LIMIT = 500;
-const DEFAULT_INSPECTOR_CONNECTION_LIMIT = 500;
-const DEFAULT_DEVICE_MESSAGE_LIMIT = 1e6;
-const DEFAULT_INSPECTOR_MESSAGE_LIMIT = 1000;
-const DEFAULT_LOG_FILE_PATH = "server_logs.txt";
 
 export interface ParsedOptions {
   inspectorPort: number;
@@ -232,7 +233,7 @@ export default function parseOptions(args: string[]): ParsedOptions {
           case "inspector-message-limit":
           case "device-message-limit":
             i++;
-            parsed[opt.outputVar] = checkNumberArg(arg, args[i]);
+            parsed[opt.outputVar] = checkIntArg(arg, args[i]);
             break;
 
           case "create-log-files":
@@ -254,13 +255,13 @@ export default function parseOptions(args: string[]): ParsedOptions {
             i++;
             if (args[i] === undefined) {
               console.error(
-                `Missing password argument for "--force-password" option.`
+                `Missing password argument for "--force-password" option.`,
               );
               process.exit(1);
             } else if (!/^[A-Za-z0-9]+$/.test(args[i])) {
               console.error(
                 `Invalid password argument for "--force-password" option. ` +
-                  `Must be only alphanumeric characters, got "${args[i]}"`
+                  `Must be only alphanumeric characters, got "${args[i]}"`,
               );
               process.exit(1);
             } else if (!shouldGeneratePassword) {
@@ -300,16 +301,21 @@ export default function parseOptions(args: string[]): ParsedOptions {
 
   return parsed;
 
-  function checkNumberArg(arg: string, val: string | undefined): number {
-    const toInt = val === undefined ? NaN : parseInt(val, 10);
+  function checkIntArg(arg: string, val: string | undefined): number {
+    const toInt = val === undefined ? NaN : Number(val);
     if (isNaN(toInt)) {
       if (val === undefined || val.startsWith("-")) {
         console.error(`Missing argument for "${arg}" option.`);
       } else {
         console.error(
-          `Invalid "${arg}" argument. Expected a number, ` + `ot "${val}".`
+          `Invalid "${arg}" argument. Expected a number, ` + `got "${val}".`,
         );
       }
+      process.exit(1);
+    } else if (toInt % 1 !== 0) {
+      console.error(
+        `Invalid "${arg}" argument. Expected an integer, ` + `got "${val}".`,
+      );
       process.exit(1);
     }
     return toInt;
@@ -361,7 +367,7 @@ function displayHelp() {
       " ".repeat(nbOfSpaces) +
       option.description.replace(
         /\n/g,
-        "\n" + " ".repeat(maxLenOptsName + SPACES_AFTER_OPTIONS)
+        "\n" + " ".repeat(maxLenOptsName + SPACES_AFTER_OPTIONS),
       );
     lines[currentLineIdx] = newLine;
     currentLineIdx++;

@@ -11,9 +11,5 @@
     "serve": "node ../utils/static_http_server.mjs --port 8696 --include-client-file"
   },
   "author": "peaberberian",
-  "license": "MIT",
-  "devDependencies": {
-    "esbuild": "^0.18.17",
-    "typescript": "^5.1.6"
-  }
+  "license": "MIT"
 }

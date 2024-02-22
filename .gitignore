@@ -1,3 +1,4 @@
+/node_modules/
 /inspector/node_modules/
 /inspector/inspector.js
 /inspector/.npmrc
@@ -10,6 +11,7 @@
 /server/node_modules/
 /server/RxPaired-server.bundle.mjs
 /server/server-logs.txt
+/server-logs.txt
 /server/logs-*.txt
 /server/build
 /server/.persistent-tokens.json
