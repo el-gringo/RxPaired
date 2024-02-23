@@ -17,6 +17,7 @@ import {
   isInitLog,
   parseAndGenerateInitLog,
 } from "./utils";
+import { clearInspectorState } from "./live_debugging";
 
 const START_LOG_LINE_REGEXP = /^[0-9]+\.[0-9]{2} \[/;
 
@@ -119,6 +120,7 @@ function createImportFileButton(
       if (typeof loadTarget.result !== "string") {
         return;
       }
+      clearInspectorState(inspectorState, logViewState);
       const dataStr = loadTarget.result;
       const logs: Array<[string, number]> = [];
       let dateAtPageLoad;

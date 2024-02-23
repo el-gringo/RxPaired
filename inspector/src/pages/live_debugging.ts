@@ -384,7 +384,7 @@ function createClearAllButton(
 /**
  * @param {Object} inspectorState
  */
-function clearInspectorState(
+export function clearInspectorState(
   inspectorState: ObservableState<InspectorState>,
   logViewState: ObservableState<LogViewState>,
 ): void {
