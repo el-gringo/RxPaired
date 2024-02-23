@@ -93,7 +93,9 @@ function createBitrateEstimateChart(
     strHtml`<canvas class="canvas-bitrate-estimate" />` as HTMLCanvasElement;
   canvasElt.width = DEFAULT_CANVAS_WIDTH;
   canvasElt.height = DEFAULT_CANVAS_HEIGHT;
+  canvasElt.style.display = "absolute";
   const canvasCtx = canvasElt.getContext("2d");
+  const measurePointEventListener: Array<(e: MouseEvent)=> void> = [] ;
 
   reRender();
   state.subscribe(STATE_PROPS.BITRATE_ESTIMATE, reRender);
@@ -103,12 +105,19 @@ function createBitrateEstimateChart(
   resizeObserver.observe(parentResizableElement);
   let lastClientHeight: number | undefined;
 
-  const canvasParent = strHtml`<div>${canvasElt}</div>`;
+  const canvasOverlay = strHtml`<div>${canvasElt}</div>` as HTMLElement;
+  canvasOverlay.style.position = "relative";
+  canvasOverlay.style.width = `${DEFAULT_CANVAS_WIDTH}px`;
+  canvasOverlay.style.height = `${DEFAULT_CANVAS_HEIGHT}px`;
+  const canvasParent = strHtml`<div>${canvasOverlay}</div>`;
   canvasParent.style.textAlign = "center";
+  canvasParent.style.overflow = "hidden";
+  canvasParent.style.aspectRatio = `${CANVAS_ASPECT_RATIO}`;
 
   return [
     canvasParent,
     () => {
+      removeEventListeners();
       state.unsubscribe(STATE_PROPS.BITRATE_ESTIMATE, reRender);
       configState.unsubscribe(STATE_PROPS.CSS_MODE, reRender);
       resizeObserver.unobserve(parentResizableElement);
@@ -116,6 +125,7 @@ function createBitrateEstimateChart(
   ];
 
   function reRender(): void {
+    removeEventListeners();
     const bitrateEstimates = state.getCurrentState(
       STATE_PROPS.BITRATE_ESTIMATE
     );
@@ -138,6 +148,12 @@ function createBitrateEstimateChart(
     }
   }
 
+  function removeEventListeners(): void {
+    for (let eventListener of measurePointEventListener) {
+      canvasElt.removeEventListener('mousemove', eventListener);
+    }
+  }
+
   function onBodyResize(): void {
     const clientHeight = parentResizableElement.clientHeight;
     const wantedHeight = clientHeight - 20;
@@ -146,6 +162,10 @@ function createBitrateEstimateChart(
     }
     canvasElt.height = wantedHeight;
     canvasElt.width = CANVAS_ASPECT_RATIO * wantedHeight;
+
+    canvasOverlay.style.width = `${CANVAS_ASPECT_RATIO * wantedHeight}px`
+    canvasOverlay.style.height = `${wantedHeight}px`
+
     reRender();
     lastClientHeight = parentResizableElement.clientHeight;
   }
@@ -256,6 +276,34 @@ function createBitrateEstimateChart(
         );
       }
       canvasCtx.stroke();
+
+      // add measure points
+      canvasCtx.fillStyle = "rgb(200, 100, 200)";
+      for (let i = 1; i < data.length; i++) {
+        const x = dateToX(data[i].timestamp);
+        const y = bitrateValueToY(data[i].bitrateEstimate ?? 0)
+        const circle = new Path2D();
+        circle.arc(x, y ?? 0, 4, 0, 2 * Math.PI);
+        canvasCtx.fill(circle);
+
+        const tooltip = strHtml`<span> </span>`
+        tooltip.innerText = convertToReadableBitUnit(data[i].bitrateEstimate ?? 0);
+        tooltip.style.position = "absolute";
+        tooltip.style.visibility = "hidden";
+        // center the tooltip and display it just a bit higher than the point
+        tooltip.style.top = `${y - 30}px`;
+        tooltip.style.left = `${x - 20}px`;
+        canvasOverlay.appendChild(tooltip)
+        const eventHander = (e: MouseEvent) => {
+          if(canvasCtx.isPointInPath(circle, e.offsetX, e.offsetY)) {
+            tooltip.style.visibility = "visible";
+          } else {
+            tooltip.style.visibility = "hidden";
+          }
+        }
+        canvasElt.addEventListener('mousemove', eventHander)
+        measurePointEventListener.push(eventHander)
+      }
     }
 
     /**
