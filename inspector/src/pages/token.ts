@@ -26,7 +26,7 @@ export default function generateTokenPage(password: string): () => void {
     </div>
     <div class="page-input-block token-block">
       <div class="token-presentation">
-        <h2>Token Management</h2>
+        <h2>RxPaired - Token Generation Page</h2>
         <p>${
           "You need a token to link the inspector to a client. " +
           "Those may be created (or reused) in this page."
