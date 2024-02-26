@@ -10,6 +10,7 @@ import createModules from "../create_modules";
 import ObservableState, { UPDATE_TYPE } from "../observable_state";
 import { updateStatesFromLogGroup } from "../update_state_from_log";
 import { generatePageUrl } from "../utils";
+import { clearInspectorState } from "./live_debugging";
 import {
   createClearStoredConfigButton,
   createDarkLightModeButton,
@@ -17,7 +18,6 @@ import {
   isInitLog,
   parseAndGenerateInitLog,
 } from "./utils";
-import { clearInspectorState } from "./live_debugging";
 
 const START_LOG_LINE_REGEXP = /^[0-9]+\.[0-9]{2} \[/;
 

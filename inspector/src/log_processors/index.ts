@@ -714,7 +714,7 @@ function processManifestParsingTimeLog(
  * @returns {Array.<Object>}
  */
 function processBitrateEstimateLog(
-  logTxt: string
+  logTxt: string,
 ): Array<StateUpdate<STATE_PROPS.BITRATE_ESTIMATE>> {
   const match = logTxt.match(REGEX_BITRATE_ESTIMATE);
   if (match === null) {

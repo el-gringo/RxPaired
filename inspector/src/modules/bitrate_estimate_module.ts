@@ -1,8 +1,8 @@
 import strHtml from "str-html";
 import { ConfigState, InspectorState, STATE_PROPS } from "../constants";
 import ObservableState from "../observable_state";
-import { ModuleFunctionArguments } from ".";
 import { convertToReadableBitUnit } from "../utils";
+import { ModuleFunctionArguments } from ".";
 
 /**
  * Margin on the bottom of the canvas.
@@ -86,7 +86,7 @@ export default function BitrateEstimateModule({
 function createBitrateEstimateChart(
   parentResizableElement: HTMLElement,
   state: ObservableState<InspectorState>,
-  configState: ObservableState<ConfigState>
+  configState: ObservableState<ConfigState>,
 ): [HTMLElement, () => void] {
   let currentMaxBitrate = BITRATE_INITIAL_UPPER_LIMIT;
   const canvasElt =
@@ -95,7 +95,7 @@ function createBitrateEstimateChart(
   canvasElt.height = DEFAULT_CANVAS_HEIGHT;
   canvasElt.style.display = "absolute";
   const canvasCtx = canvasElt.getContext("2d");
-  const measurePointEventListener: Array<(e: MouseEvent)=> void> = [] ;
+  const measurePointEventListener: Array<(e: MouseEvent) => void> = [];
 
   reRender();
   state.subscribe(STATE_PROPS.BITRATE_ESTIMATE, reRender);
@@ -105,7 +105,7 @@ function createBitrateEstimateChart(
   resizeObserver.observe(parentResizableElement);
   let lastClientHeight: number | undefined;
 
-  const canvasOverlay = strHtml`<div>${canvasElt}</div>` as HTMLElement;
+  const canvasOverlay = strHtml`<div>${canvasElt}</div>`;
   canvasOverlay.style.position = "relative";
   canvasOverlay.style.width = `${DEFAULT_CANVAS_WIDTH}px`;
   canvasOverlay.style.height = `${DEFAULT_CANVAS_HEIGHT}px`;
@@ -127,7 +127,7 @@ function createBitrateEstimateChart(
   function reRender(): void {
     removeEventListeners();
     const bitrateEstimates = state.getCurrentState(
-      STATE_PROPS.BITRATE_ESTIMATE
+      STATE_PROPS.BITRATE_ESTIMATE,
     );
     if (bitrateEstimates !== undefined && bitrateEstimates.length > 0) {
       const lastDate =
@@ -149,8 +149,8 @@ function createBitrateEstimateChart(
   }
 
   function removeEventListeners(): void {
-    for (let eventListener of measurePointEventListener) {
-      canvasElt.removeEventListener('mousemove', eventListener);
+    for (const eventListener of measurePointEventListener) {
+      canvasElt.removeEventListener("mousemove", eventListener);
     }
   }
 
@@ -163,15 +163,15 @@ function createBitrateEstimateChart(
     canvasElt.height = wantedHeight;
     canvasElt.width = CANVAS_ASPECT_RATIO * wantedHeight;
 
-    canvasOverlay.style.width = `${CANVAS_ASPECT_RATIO * wantedHeight}px`
-    canvasOverlay.style.height = `${wantedHeight}px`
+    canvasOverlay.style.width = `${CANVAS_ASPECT_RATIO * wantedHeight}px`;
+    canvasOverlay.style.height = `${wantedHeight}px`;
 
     reRender();
     lastClientHeight = parentResizableElement.clientHeight;
   }
 
   function onNewData(
-    data: Array<{ bitrateEstimate: number | undefined; timestamp: number }>
+    data: Array<{ bitrateEstimate: number | undefined; timestamp: number }>,
   ): void {
     if (canvasCtx === null) {
       return;
@@ -272,7 +272,7 @@ function createBitrateEstimateChart(
       for (let i = 1; i < data.length; i++) {
         canvasCtx.lineTo(
           dateToX(data[i].timestamp),
-          bitrateValueToY(data[i].bitrateEstimate ?? 0)
+          bitrateValueToY(data[i].bitrateEstimate ?? 0),
         );
       }
       canvasCtx.stroke();
@@ -281,28 +281,30 @@ function createBitrateEstimateChart(
       canvasCtx.fillStyle = "rgb(200, 100, 200)";
       for (let i = 1; i < data.length; i++) {
         const x = dateToX(data[i].timestamp);
-        const y = bitrateValueToY(data[i].bitrateEstimate ?? 0)
+        const y = bitrateValueToY(data[i].bitrateEstimate ?? 0);
         const circle = new Path2D();
         circle.arc(x, y ?? 0, 4, 0, 2 * Math.PI);
         canvasCtx.fill(circle);
 
-        const tooltip = strHtml`<span> </span>`
-        tooltip.innerText = convertToReadableBitUnit(data[i].bitrateEstimate ?? 0);
+        const tooltip = strHtml`<span> </span>`;
+        tooltip.innerText = convertToReadableBitUnit(
+          data[i].bitrateEstimate ?? 0,
+        );
         tooltip.style.position = "absolute";
         tooltip.style.visibility = "hidden";
         // center the tooltip and display it just a bit higher than the point
         tooltip.style.top = `${y - 30}px`;
         tooltip.style.left = `${x - 20}px`;
-        canvasOverlay.appendChild(tooltip)
+        canvasOverlay.appendChild(tooltip);
         const eventHander = (e: MouseEvent) => {
-          if(canvasCtx.isPointInPath(circle, e.offsetX, e.offsetY)) {
+          if (canvasCtx.isPointInPath(circle, e.offsetX, e.offsetY)) {
             tooltip.style.visibility = "visible";
           } else {
             tooltip.style.visibility = "hidden";
           }
-        }
-        canvasElt.addEventListener('mousemove', eventHander)
-        measurePointEventListener.push(eventHander)
+        };
+        canvasElt.addEventListener("mousemove", eventHander);
+        measurePointEventListener.push(eventHander);
       }
     }
 
