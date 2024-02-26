@@ -332,11 +332,11 @@ function createNoTokenTutorialElement(hasPassword: boolean): HTMLElement {
   /* eslint-enable max-len */
 
   const liElt2 = strHtml`<li>
-    Add manually the content of this script to the beginning of the
-    first script tag of your page:
-    <a href=${CLIENT_SCRIPT_URL}>${CLIENT_SCRIPT_URL}</a>
-    and manually set the
-    \`<span class="emphasized">__TOKEN__</span>\`
+  <span class="emphasized">${"OR"}</span>
+    copy-paste the content of <a class="emphasized" href=${CLIENT_SCRIPT_URL}>this file</a>
+    inside a new <span class="emphasized">${"<script>"}</span> tag before all other
+    ${"<script>"} tags in your page and manually set the
+    \`<span class="emphasized">__FORCED_TOKEN__</span>\`
     variable on top of that script to
     <span class="emphasized">"${fakeTokenStr}"</span>${
       hasPassword
@@ -374,7 +374,8 @@ function createNoTokenTutorialElement(hasPassword: boolean): HTMLElement {
     console.error("Failed to dynamically import inspector:", error)
   );`;
   const liElt3 = strHtml`<li>
-    Import dynamically the script in your code by writing something like:
+    <span class="emphasized">${"OR"}</span>
+    import dynamically the script in your code by writing something like:
     <details class="code-details">
       <summary>code</summary>
       <pre>${dynamicImportCode1}</pre>
