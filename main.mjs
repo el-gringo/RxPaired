@@ -113,6 +113,7 @@ export default function startRxPaired({
       plugins: [],
       deviceScriptUrl,
       inspectorDebuggerUrl,
+      noPassword,
     }).catch((err) => {
       console.error(
         `\x1b[31m[${getHumanReadableHours()}]\x1b[0m Inspector build failed:`,

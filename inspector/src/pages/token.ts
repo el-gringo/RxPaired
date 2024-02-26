@@ -1,5 +1,5 @@
 import strHtml from "str-html";
-import { CLIENT_SCRIPT_URL, SERVER_URL } from "../constants";
+import { CLIENT_SCRIPT_URL, DISABLE_PASSWORD, SERVER_URL } from "../constants";
 import { displayError, isTokenValid, generatePageUrl } from "../utils";
 
 /**
@@ -16,12 +16,18 @@ export default function generateTokenPage(password: string): () => void {
     ${errorContainerElt}
     <div class="header">
       <div class="header-item page-title">
-        <a href=${generatePageUrl({
-          tokenId: null,
-          forcePassReset: true,
-          isPostDebugger: false,
-        })}>${"Password"}</a>
-        ${"> Token"}
+      ${
+        DISABLE_PASSWORD
+          ? null
+          : [
+              strHtml`<a href=${generatePageUrl({
+                tokenId: null,
+                forcePassReset: true,
+                isPostDebugger: false,
+              })}>${"Password"}</a>`,
+              " > Token",
+            ]
+      }
       </div>
     </div>
     <div class="page-input-block token-block">

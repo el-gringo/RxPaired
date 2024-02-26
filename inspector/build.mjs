@@ -97,6 +97,8 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
  * server.
  * @param {string|null|undefined} [options.deviceScriptUrl] - URL where the
  * RxPaired client script may be fetched.
+ * @param {boolean|null|undefined} [options.noPassword] - If `true` the
+ * password page will never be displayed.
  * @param {boolean} [options.minify] - If `true`, the output will be minified.
  * @param {boolean} [options.watch] - If `true`, the files involved
  * will be watched and the code re-built each time one of them changes.
@@ -115,6 +117,7 @@ export default function buildWebInspector(options) {
     define: {
       _INSPECTOR_DEBUGGER_URL_: JSON.stringify(options.inspectorDebuggerUrl),
       __DEVICE_SCRIPT_URL__: JSON.stringify(options.deviceScriptUrl ?? null),
+      __DISABLE_PASSWORD__: JSON.stringify(options.noPassword ?? false),
     },
   };
   return watch
