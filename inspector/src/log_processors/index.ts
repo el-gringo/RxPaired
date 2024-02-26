@@ -709,6 +709,10 @@ function processManifestParsingTimeLog(
   ];
 }
 
+/**
+ * @param {string} logTxt
+ * @returns {Array.<Object>}
+ */
 function processBitrateEstimateLog(
   logTxt: string
 ): Array<StateUpdate<STATE_PROPS.BITRATE_ESTIMATE>> {
