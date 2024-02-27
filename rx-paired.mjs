@@ -18,6 +18,8 @@ import buildClient from "./client/build.mjs";
 import buildInspector from "./inspector/build.mjs";
 import startStaticHttpServer from "./utils/static_http_server.mjs";
 
+const DEFAULT_STATIC_SERVER_PORT = 8695;
+
 const currentDirName = getCurrentDirectoryName();
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
@@ -43,6 +45,10 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
       case "--inspector-port":
         i++;
         devicePort = checkIntArg(arg, argv[i]);
+        break;
+      case "--http-port":
+        i++;
+        inspectorPort = checkIntArg(arg, argv[i]);
         break;
       case "--password":
         i++;
@@ -70,6 +76,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
 
 export default function startRxPaired({
   password,
+  httpPort,
   devicePort,
   inspectorPort,
 } = {}) {
@@ -92,7 +99,7 @@ export default function startRxPaired({
     disableNoToken: false,
   };
 
-  const staticServerPort = 8695;
+  const staticServerPort = httpPort ?? DEFAULT_STATIC_SERVER_PORT;
   const deviceDebuggerUrl = `ws://127.0.0.1:${serverOpts.devicePort}`;
   const deviceScriptUrl = `http://127.0.0.1:${staticServerPort}/client.js`;
   const inspectorDebuggerUrl = `ws://127.0.0.1:${serverOpts.inspectorPort}`;
@@ -185,13 +192,17 @@ function getCurrentDirectoryName() {
 function displayHelp() {
   console.log(
     /* eslint-disable indent */
-    `Usage: node static_http_server.mjs [options]
+    `Usage: rx-paired [options]
 Options:
 
   -h, --help                     Display this help
 
   --password <alphanumeric>      Optional password used by the server.
                                  Ignore for no password.
+
+  --httpPort <port>              Port used to deliver the inspector HTTP page and
+                                 the device's script.
+                                 Defaults to ${DEFAULT_STATIC_SERVER_PORT}.
 
   --devicePort <port>            Port used for device-to-server communication.
                                  Defaults to ${DEFAULT_DEVICE_PORT}.
