@@ -200,12 +200,15 @@ export default function startRxPaired({
           );
         } else {
           console.log(
-            `To start using it, go to http://127.0.0.1:${staticServerPort}/`,
+            `To start the inspector, go to http://127.0.0.1:${staticServerPort}/`,
           );
         }
       } else {
         if (!noInspector) {
-          const inspectorPath = path.join(currentDirName, "inspector/index.html");
+          const inspectorPath = path.join(
+            currentDirName,
+            "inspector/index.html",
+          );
           console.log(
             `An inspector build has been generated in \`${inspectorPath}\` and a client script in \`${clientPath}\``,
           );
