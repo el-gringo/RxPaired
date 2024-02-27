@@ -32,7 +32,9 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   }
 
   let password = null;
+  let noInspector = false;
   let inspectorPort;
+  let httpPort;
   let devicePort;
 
   for (let i = 2; i < argv.length; i++) {
@@ -48,7 +50,10 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
         break;
       case "--http-port":
         i++;
-        inspectorPort = checkIntArg(arg, argv[i]);
+        httpPort = checkIntArg(arg, argv[i]);
+        break;
+      case "--no-inspector":
+        noInspector = true;
         break;
       case "--password":
         i++;
@@ -71,7 +76,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     }
   }
 
-  startRxPaired({ password, devicePort, inspectorPort });
+  startRxPaired({ password, devicePort, inspectorPort, noInspector, httpPort });
 }
 
 export default function startRxPaired({
@@ -79,6 +84,7 @@ export default function startRxPaired({
   httpPort,
   devicePort,
   inspectorPort,
+  noInspector,
 } = {}) {
   const noPassword = typeof password !== "string" || password.length === 0;
   const serverOpts = {
@@ -104,6 +110,15 @@ export default function startRxPaired({
   const deviceScriptUrl = `http://127.0.0.1:${staticServerPort}/client.js`;
   const inspectorDebuggerUrl = `ws://127.0.0.1:${serverOpts.inspectorPort}`;
 
+  let tokenValue = null;
+  if (noInspector) {
+    if (password !== null) {
+      tokenValue = `!notoken/${password}`;
+    } else {
+      tokenValue = "!notoken";
+    }
+  }
+
   console.log("Starting RxPaired...");
   Promise.race([
     RxPairedServer(serverOpts).catch((err) => {
@@ -114,26 +129,29 @@ export default function startRxPaired({
       process.exit(1);
     }),
 
-    buildInspector({
-      minify: true,
-      watch: false,
-      plugins: [],
-      deviceScriptUrl,
-      inspectorDebuggerUrl,
-      noPassword,
-    }).catch((err) => {
-      console.error(
-        `\x1b[31m[${getHumanReadableHours()}]\x1b[0m Inspector build failed:`,
-        err,
-      );
-      process.exit(1);
-    }),
+    noInspector
+      ? Promise.resolve()
+      : buildInspector({
+          minify: true,
+          watch: false,
+          plugins: [],
+          deviceScriptUrl,
+          inspectorDebuggerUrl,
+          noPassword,
+        }).catch((err) => {
+          console.error(
+            `\x1b[31m[${getHumanReadableHours()}]\x1b[0m Inspector build failed:`,
+            err,
+          );
+          process.exit(1);
+        }),
 
     buildClient({
       minify: true,
       watch: false,
       plugins: [],
       deviceDebuggerUrl,
+      tokenValue,
     }).catch((err) => {
       console.error(
         `\x1b[31m[${getHumanReadableHours()}]\x1b[0m Client build failed:`,
@@ -143,6 +161,9 @@ export default function startRxPaired({
     }),
   ])
     .then(() => {
+      if (staticServerPort <= 0) {
+        return;
+      }
       const servedFiles = {
         "index.html": {
           path: path.join(currentDirName, "inspector", "index.html"),
@@ -171,9 +192,29 @@ export default function startRxPaired({
     .then(() => {
       console.log("");
       console.log("RxPaired started with success!");
-      console.log(
-        `To start using it, go to http://127.0.0.1:${staticServerPort}/`,
-      );
+      const clientPath = path.join(currentDirName, "client/client.js");
+      if (staticServerPort > 0) {
+        if (noInspector) {
+          console.log(
+            `You may load the client script at http://127.0.0.1:${staticServerPort}/client.js or find it in \`${clientPath}\`.`,
+          );
+        } else {
+          console.log(
+            `To start using it, go to http://127.0.0.1:${staticServerPort}/`,
+          );
+        }
+      } else {
+        if (!noInspector) {
+          const inspectorPath = path.join(currentDirName, "inspector/index.html");
+          console.log(
+            `An inspector build has been generated in \`${inspectorPath}\` and a client script in \`${clientPath}\``,
+          );
+        } else {
+          console.log(
+            `A client script has been generated in \`${clientPath}\`, you can now run that script in your device.`,
+          );
+        }
+      }
     });
 }
 
@@ -200,15 +241,21 @@ Options:
   --password <alphanumeric>      Optional password used by the server.
                                  Ignore for no password.
 
-  --httpPort <port>              Port used to deliver the inspector HTTP page and
-                                 the device's script.
+  --http-port <port>             Port used to deliver the inspector HTTP page and the
+                                 device's script.
                                  Defaults to ${DEFAULT_STATIC_SERVER_PORT}.
+                                 You may set it to "-1" to disable the static server.
 
-  --devicePort <port>            Port used for device-to-server communication.
+  --device-port <port>           Port used for device-to-server communication.
                                  Defaults to ${DEFAULT_DEVICE_PORT}.
 
-  --inspectorPort <port>         Port used for inspector-to-server communication.
-                                 Defaults to ${DEFAULT_INSPECTOR_PORT}.`,
+  --inspector-port <port>        Port used for inspector-to-server communication.
+                                 Defaults to ${DEFAULT_INSPECTOR_PORT}.
+
+  --no-inspector                 If this option is present, we won't build and serve the
+                                 inspector page nor rely on it for "token" creation.
+                                 In effect, RxPaired will mostly act as a log server and
+                                 create local files as new clients connect to it.`,
     /* eslint-enable indent */
   );
 }

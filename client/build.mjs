@@ -19,7 +19,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
         "the content of the following file: " +
         path.join(currentDirName, ".npmrc.sample") +
         ".\n" +
-        "  2. Called this script through an npm script command (e.g. npm run *script*).",
+        "  2. Called this script through an npm script command (e.g. npm run *script*)."
     );
     process.exit(1);
   }
@@ -29,7 +29,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     console.error(
       "Error: Invalid device_debugger_url." +
         "\n" +
-        "Please make sure that this url uses either the http, https, ws or wss.",
+        "Please make sure that this url uses either the http, https, ws or wss."
     );
     process.exit(1);
   }
@@ -51,7 +51,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
       build.onStart(() => {
         console.log(
           `\x1b[33m[${getHumanReadableHours()}]\x1b[0m ` +
-            "New client build started",
+            "New client build started"
         );
       });
       build.onEnd((result) => {
@@ -60,12 +60,12 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
           console.log(
             `\x1b[33m[${getHumanReadableHours()}]\x1b[0m ` +
               `client re-built with ${errors.length} error(s) and ` +
-              ` ${warnings.length} warning(s) `,
+              ` ${warnings.length} warning(s) `
           );
           return;
         }
         console.log(
-          `\x1b[32m[${getHumanReadableHours()}]\x1b[0m ` + "client built!",
+          `\x1b[32m[${getHumanReadableHours()}]\x1b[0m ` + "client built!"
         );
       });
     },
@@ -78,7 +78,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   }).catch((err) => {
     console.error(
       `\x1b[31m[${getHumanReadableHours()}]\x1b[0m Client build failed:`,
-      err,
+      err
     );
     process.exit(1);
   });
@@ -92,7 +92,8 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
  * @param {boolean} [options.minify] - If `true`, the output will be minified.
  * @param {boolean} [options.watch] - If `true`, the files involved
  * will be watched and the code re-built each time one of them changes.
- * @param {Array|undefined} [plugins]
+ * @param {Array|undefined} [options.plugins]
+ * @param {Array|undefined} [options.tokenValue]
  * @returns {Promise}
  */
 export default function buildClient(options) {
@@ -107,6 +108,7 @@ export default function buildClient(options) {
     plugins: options.plugins,
     define: {
       _DEVICE_DEBUGGER_URL_: JSON.stringify(options.deviceDebuggerUrl),
+      _BUILD_TIME_TOKEN_VALUE_: JSON.stringify(options.tokenValue ?? null),
     },
   };
   return watch
@@ -144,7 +146,7 @@ function displayHelp() {
 Options:
   -h, --help             Display this help
   -m, --minify           Minify the built demo
-  -w, --watch            Re-build each time either the demo or library files change`,
+  -w, --watch            Re-build each time either the demo or library files change`
     /* eslint-enable indent */
   );
 }

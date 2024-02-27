@@ -6,14 +6,17 @@ function init(currentScriptSrc, playerClass) {
 
   let token = __TOKEN__;
   if (token === "") {
-    if (currentScriptSrc == null) {
+    if (typeof _BUILD_TIME_TOKEN_VALUE_ === "string") {
+      token = _BUILD_TIME_TOKEN_VALUE_;
+    } else if (currentScriptSrc == null) {
       return;
+    } else {
+      const indexOfNumSign = currentScriptSrc.indexOf("#");
+      if (indexOfNumSign === -1) {
+        return;
+      }
+      token = currentScriptSrc.substring(indexOfNumSign + 1);
     }
-    const indexOfNumSign = currentScriptSrc.indexOf("#");
-    if (indexOfNumSign === -1) {
-      return;
-    }
-    token = currentScriptSrc.substring(indexOfNumSign + 1);
   }
 
   /** To set to true if you also want to log when xhr are received / sent */
