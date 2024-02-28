@@ -105,6 +105,7 @@ export default function buildClient(options) {
     minifySyntax: minify,
     target: "es6",
     outfile: path.join(currentDirName, "client.js"),
+    legalComments: "inline",
     plugins: options.plugins,
     define: {
       _DEVICE_DEBUGGER_URL_: JSON.stringify(options.deviceDebuggerUrl),

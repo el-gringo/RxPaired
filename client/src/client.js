@@ -1,10 +1,35 @@
-/** To set to the token given. */
-const __TOKEN__ = "";
+/*!
+ * +-------------------------------------------------------------------------+
+ * | Only if you copy-pasted that script, you may set the `__FORCED_TOKEN__` |
+ * | variable below to the token you generated on the inspector.             |
+ * |                                                                         |
+ * | Example: `var __FORCED_TOKEN__ = "mytoken";`                            |
+ * +-------------------------------------------------------------------------+
+ */
+const __FORCED_TOKEN__ = "";
+
+/*!
+ * +-------------------------------------------------------------------------+
+ * | Only if you proxified RxPaired-server (for example because you used an  |
+ * | HTTPS tunneling tool like localtunnel or ngrok), you can set the        |
+ * | variable below to the URL of your new server.                           |
+ * |                                                                         |
+ * | Example: `var __FORCED_SERVER_URL__ = "https://abcdef.ngrok.app";`      |
+ * +-------------------------------------------------------------------------+
+ */
+const __FORCED_SERVER_URL__ = "";
 
 function init(currentScriptSrc, playerClass) {
-  const wsUrl = _DEVICE_DEBUGGER_URL_;
+  let wsUrl = _DEVICE_DEBUGGER_URL_;
+  if (__FORCED_SERVER_URL__ === "") {
+    if (/^https?:\/\//i.test(__FORCED_SERVER_URL__)) {
+      wsUrl = "ws" + __FORCED_SERVER_URL__.substring(4);
+    } else {
+      wsUrl = __FORCED_SERVER_URL__;
+    }
+  }
 
-  let token = __TOKEN__;
+  let token = __FORCED_TOKEN__;
   if (token === "") {
     if (typeof _BUILD_TIME_TOKEN_VALUE_ === "string") {
       token = _BUILD_TIME_TOKEN_VALUE_;
