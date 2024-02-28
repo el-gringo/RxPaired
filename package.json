@@ -23,6 +23,7 @@
   "homepage": "https://github.com/canalplus/RxPaired#readme",
   "dependencies": {
     "esbuild": "^0.20.1",
+    "str-html": "^0.2.0",
     "ws": "^8.16.0"
   },
   "devDependencies": {
