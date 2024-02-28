@@ -7,7 +7,7 @@
   "scripts": {
     "fmt": "prettier --write .",
     "fmt:check": "prettier . --check",
-    "start": "node rx-paired.mjs",
+    "start": "cd server && npm run build && cd .. && node rx-paired.mjs",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
