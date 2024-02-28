@@ -92,7 +92,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   startStaticServer(servedFiles, httpPort);
 }
 
-export default function startStaticServer(files, port) {
+export default function startStaticServer(files, port, silent = false) {
   http
     .createServer(function (request, response) {
       const wantedFile = request.url?.substring("1");
@@ -103,9 +103,11 @@ export default function startStaticServer(files, port) {
         fileObject?.contentType === undefined ||
         fileObject.path === undefined
       ) {
-        console.log(
-          `\u001b[31mReceived request for unknown resource: ${wantedFile}\u001b[39m`,
-        );
+        if (!silent) {
+          console.log(
+            `\u001b[31mReceived request for unknown resource: ${wantedFile}\u001b[39m`,
+          );
+        }
         response.writeHead(404, {
           "Access-Control-Allow-Origin": "*",
           "Content-Type": "text/plain; charset=UTF-8",
@@ -115,15 +117,19 @@ export default function startStaticServer(files, port) {
       }
 
       const { path: fileToRead, contentType } = fileObject;
-      console.log(
-        `Received request for known resource: \u001b[32m${fileToRead}\u001b[0m`,
-      );
+      if (!silent) {
+        console.log(
+          `Received request for known resource: \u001b[32m${fileToRead}\u001b[0m`,
+        );
+      }
       fs.readFile(fileToRead, function (error, fileContent) {
         if (error) {
           if (error.code === "ENOENT") {
-            console.log(
-              `\u001b[31mFile not reachable: ${fileToRead}\u001b[39m`,
-            );
+            if (!silent) {
+              console.log(
+                `\u001b[31mFile not reachable: ${fileToRead}\u001b[39m`,
+              );
+            }
             response.writeHead(404, {
               "Access-Control-Allow-Origin": "*",
               "Content-Type": "text/plain; charset=UTF-8",
@@ -131,10 +137,12 @@ export default function startStaticServer(files, port) {
             response.end("No file found at the corresponding URL", "utf-8");
             return;
           } else {
-            console.log(
-              `\u001b[31mAn error occured while trying to read: ${fileToRead}\n` +
-                `error: ${error.code}\u001b[39mA`,
-            );
+            if (!silent) {
+              console.log(
+                `\u001b[31mAn error occured while trying to read: ${fileToRead}\n` +
+                  `error: ${error.code}\u001b[39mA`,
+              );
+            }
             response.writeHead(500, {
               "Access-Control-Allow-Origin": "*",
               "Content-Type": "text/plain; charset=UTF-8",
@@ -153,17 +161,21 @@ export default function startStaticServer(files, port) {
     })
     .listen(port);
 
-  for (const resource of Object.keys(files)) {
-    const fileInfo = files[resource];
-    console.log(
-      `Serving \u001b[32m${fileInfo.path}\u001b[0m from route \u001b[32m/${resource}\u001b[0m`,
-    );
+  if (!silent) {
+    for (const resource of Object.keys(files)) {
+      const fileInfo = files[resource];
+      console.log(
+        `Serving \u001b[32m${fileInfo.path}\u001b[0m from route \u001b[32m/${resource}\u001b[0m`,
+      );
+    }
   }
 
-  console.log(
-    `\nServer running at \u001b[32mhttp://127.0.0.1:${port}\u001b[0m`,
-  );
-  console.log("\nHit CTRL-C to stop the server");
+  if (!silent) {
+    console.log(
+      `\nServer running at \u001b[32mhttp://127.0.0.1:${port}\u001b[0m`,
+    );
+    console.log("\nHit CTRL-C to stop the server");
+  }
 }
 
 /**

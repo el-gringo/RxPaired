@@ -45,56 +45,25 @@ Its key features are:
 
 ## Quick start
 
-RxPaired rely on three components: a script called the "client" running on the
-debugged device, an "inspector" page allowing remote debugging on your computer
-and a "server" managing connections between those two.
+To quickly check if this tool can help you, you can test it easily:
 
-To quickly check if this tool can help you, you can start all three of them
-locally through our scripts. For that, you can do the following:
-
-1. Clone this repository by running in a terminal:
+1. Make sure `npm` is installed and call:
 
    ```sh
-   git clone https://github.com/peaBerberian/RxPaired.git --depth=1
-   cd RxPaired
+   npx rx-paired
    ```
 
-2. In a first terminal, you'll run the RxPaired server by running those commands at
-   the root of the RxPaired repository:
+   _(Note: Optionally, you can update the ports it relies on, call
+   `npx rx-paired --help` to have more information on this)._
 
-   ```sh
-   cd ./server
-   npm install # install the RxPaired-server's dependencies
-   npm run build # build the server
-   node ./RxPaired-server --no-password # run it (no need of password for now)
-   ```
+2. In a web browser, go to the inspector page which should now be served at
+   [http://127.0.0.1:8695](http://127.0.0.1:8695).
 
-3. In a second terminal build both the client and inspector and serve them by
-   running those commands also at the root of the RxPaired repository:
-
-   ```sh
-   cd client
-   npm install # install the RxPaired-client's dependencies
-   cp .npmrc.sample .npmrc # set default config
-   npm run build # build it
-   cd ../inspector # Go back to the RxPaired-inspector now
-   npm install # install the RxPaired-inspector's dependencies
-   cp .npmrc.sample .npmrc # set default config
-   npm run build # build it
-   cd .. # Go back to the repository's root
-   # Now serve them
-   node utils/static_http_server.mjs --include-inspector-files --include-client-file
-   ```
-
-4. In a web browser, go to the inspector page which now should be at
-   [http://127.0.0.1:8695](http://127.0.0.1:8695) and validate an empty password
-   if the page asks for one.
-
-5. For our test, we will use the `example` token. Define it in the corresponding
+3. For our test, we will use the `example` token. Define it in the corresponding
    input and click on the `Use now` button to enable it. You will be redirected
    to a debugging page for that token.
 
-6. In another browser tab, go to [the RxPlayer demo
+4. In another browser tab, go to [the RxPlayer demo
    page](https://developers.canal-plus.com/rx-player/) (any page with the
    RxPlayer will do, but the `RxPlayer` JavaScript class - **not an
    instance** - needs to be accessible, see the script below).
@@ -107,8 +76,9 @@ locally through our scripts. For that, you can do the following:
      .then(() => {
        window.__RX_INSPECTOR_RUN__({
          url: "http://127.0.0.1:8695/client.js#example",
-         playerClass: RxPlayer, // For other pages: the RxPlayer class needs
+         // For other pages: the RxPlayer class needs
          // to be accessible and communicated here
+         playerClass: RxPlayer,
        });
        console.info("Inspector initialized with success!");
      })
@@ -117,9 +87,9 @@ locally through our scripts. For that, you can do the following:
      );
    ```
 
-7. Play a content in that page.
+5. Play a content in that page.
 
-8. Go back to the inspector page. You should now see logs and graphs about
+6. Go back to the inspector page. You should now see logs and graphs about
    playback!
 
 If you want to understand how it all works and how to use this in more complex

@@ -2,6 +2,7 @@
 /** @see .npmrc file */
 declare const _INSPECTOR_DEBUGGER_URL_: string;
 declare const __DEVICE_SCRIPT_URL__: string;
+declare const __DISABLE_PASSWORD__: boolean;
 /* eslint-enable @typescript-eslint/naming-convention */
 
 /**
@@ -12,6 +13,9 @@ export const SERVER_URL = _INSPECTOR_DEBUGGER_URL_;
 
 /** URL to the JavaScript script that should run on the device. */
 export const CLIENT_SCRIPT_URL = __DEVICE_SCRIPT_URL__;
+
+/** If `true`, we shouldn't display the password page. */
+export const DISABLE_PASSWORD = __DISABLE_PASSWORD__;
 
 /** Maximum number of individual logs that will be in the DOM at any given time. */
 export const DEFAULT_MAX_DISPLAYED_LOG_ELEMENTS = 9001;

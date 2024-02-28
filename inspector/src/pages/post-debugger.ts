@@ -1,6 +1,7 @@
 import strHtml from "str-html";
 import {
   ConfigState,
+  DISABLE_PASSWORD,
   InspectorState,
   LogViewState,
   STATE_PROPS,
@@ -190,20 +191,24 @@ function createPostDebuggerHeaderElement(
 ): HTMLElement {
   return strHtml`<div class="header">
     <div class="token-title">
-      <span class="header-item page-title">
-        <a href=${generatePageUrl({
-          tokenId: null,
-          forcePassReset: true,
-          isPostDebugger: false,
-        })}>Password</a>
-        ${">"}
-        <a href=${generatePageUrl({
+      <span class="header-item page-title">${[
+        DISABLE_PASSWORD
+          ? null
+          : [
+              strHtml`<a href=${generatePageUrl({
+                tokenId: null,
+                forcePassReset: true,
+                isPostDebugger: false,
+              })}>Password</a>`,
+              " > ",
+            ],
+        strHtml`<a href=${generatePageUrl({
           tokenId: null,
           forcePassReset: false,
           isPostDebugger: false,
-        })}>Token</a>
-        ${"> Post-Debugger"}
-      </span>
+        })}>Token</a>`,
+        " > Post-Debugger",
+      ]}</span>
     </div>
     <div class="header-item">${[
       createTimeRepresentationSwitch(configState),

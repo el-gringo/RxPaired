@@ -2,110 +2,129 @@
 
 import path from "path";
 import process from "process";
-import esbuild from "esbuild";
 import { fileURLToPath } from "url";
+import esbuild from "esbuild";
 
 const currentDirName = getCurrentDirectoryName();
 
-if (
-  typeof process.env.npm_config_inspector_debugger_url !== "string" ||
-  typeof process.env.npm_config_device_script_url !== "string"
-) {
-  console.error(
-    "Error: Invalid environment variable(s)." +
-      "\n" +
-      "Please make sure that you:\n" +
-      `  1. Declared an ".npmrc" file in the "${currentDirName}" directory based on ` +
-      "the content of the following file: " +
-      path.join(currentDirName, ".npmrc.sample") +
-      ".\n" +
-      "  2. Called this script through an npm script command (e.g. npm run *script*).",
-  );
-  process.exit(1);
-}
-let inspectorDebuggerUrl = process.env.npm_config_inspector_debugger_url;
-if (!/^(http|ws)s?:\/\//.test(inspectorDebuggerUrl)) {
-  console.error(
-    "Error: Invalid inspector_debugger_url." +
-      "\n" +
-      "Please make sure that this url uses either the http, https, ws or wss.",
-  );
-  process.exit(1);
-}
-if (inspectorDebuggerUrl.startsWith("http")) {
-  inspectorDebuggerUrl = "ws" + inspectorDebuggerUrl.slice(4);
-}
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  // The script has been run directly
 
-const { argv } = process;
-if (argv.includes("-h") || argv.includes("--help")) {
-  displayHelp();
-  process.exit(0);
-}
-const shouldWatch = argv.includes("-w") || argv.includes("--watch");
-const shouldMinify = argv.includes("-m") || argv.includes("--minify");
+  if (
+    typeof process.env.npm_config_inspector_debugger_url !== "string" ||
+    typeof process.env.npm_config_device_script_url !== "string"
+  ) {
+    console.error(
+      "Error: Invalid environment variable(s)." +
+        "\n" +
+        "Please make sure that you:\n" +
+        `  1. Declared an ".npmrc" file in the "${currentDirName}" directory based on ` +
+        "the content of the following file: " +
+        path.join(currentDirName, ".npmrc.sample") +
+        ".\n" +
+        "  2. Called this script through an npm script command (e.g. npm run *script*).",
+    );
+    process.exit(1);
+  }
 
-const consolePlugin = {
-  name: "onEnd",
-  setup(build) {
-    build.onStart(() => {
-      console.log(
-        `\x1b[33m[${getHumanReadableHours()}]\x1b[0m ` +
-          "New inspector build started",
-      );
-    });
-    build.onEnd((result) => {
-      if (result.errors.length > 0 || result.warnings.length > 0) {
-        const { errors, warnings } = result;
+  let inspectorDebuggerUrl = process.env.npm_config_inspector_debugger_url;
+  if (!/^(http|ws)s?:\/\//.test(inspectorDebuggerUrl)) {
+    console.error(
+      "Error: Invalid inspector_debugger_url." +
+        "\n" +
+        "Please make sure that this url uses either the http, https, ws or wss.",
+    );
+    process.exit(1);
+  }
+  if (inspectorDebuggerUrl.startsWith("http")) {
+    inspectorDebuggerUrl = "ws" + inspectorDebuggerUrl.slice(4);
+  }
+
+  const deviceScriptUrl = process.env.npm_config_device_script_url;
+
+  const { argv } = process;
+  if (argv.includes("-h") || argv.includes("--help")) {
+    displayHelp();
+    process.exit(0);
+  }
+  const shouldWatch = argv.includes("-w") || argv.includes("--watch");
+  const shouldMinify = argv.includes("-m") || argv.includes("--minify");
+
+  const consolePlugin = {
+    name: "onEnd",
+    setup(build) {
+      build.onStart(() => {
         console.log(
           `\x1b[33m[${getHumanReadableHours()}]\x1b[0m ` +
-            `inspector re-built with ${errors.length} error(s) and ` +
-            ` ${warnings.length} warning(s) `,
+            "New inspector build started",
         );
-        return;
-      }
-      console.log(
-        `\x1b[32m[${getHumanReadableHours()}]\x1b[0m ` + "inspector built!",
-      );
-    });
-  },
-};
-buildWebInspector({ minify: shouldMinify, watch: shouldWatch });
-
-/**
- * Build the inspector with the given options.
- * @param {Object} options
- * @param {boolean} [options.minify] - If `true`, the output will be minified.
- * @param {boolean} [options.watch] - If `true`, the files involved
- * will be watched and the code re-built each time one of them changes.
- */
-function buildWebInspector(options) {
-  const minify = !!options.minify;
-  const watch = !!options.watch;
-  const esbuildOpts = {
-    entryPoints: [path.join(currentDirName, "src", "index.ts")],
-    bundle: true,
-    minify,
-    plugins: [consolePlugin],
-    outfile: path.join(currentDirName, "inspector.js"),
-    define: {
-      _INSPECTOR_DEBUGGER_URL_: JSON.stringify(inspectorDebuggerUrl),
-      __DEVICE_SCRIPT_URL__: JSON.stringify(
-        process.env.npm_config_device_script_url,
-      ),
+      });
+      build.onEnd((result) => {
+        if (result.errors.length > 0 || result.warnings.length > 0) {
+          const { errors, warnings } = result;
+          console.log(
+            `\x1b[33m[${getHumanReadableHours()}]\x1b[0m ` +
+              `inspector re-built with ${errors.length} error(s) and ` +
+              ` ${warnings.length} warning(s) `,
+          );
+          return;
+        }
+        console.log(
+          `\x1b[32m[${getHumanReadableHours()}]\x1b[0m ` + "inspector built!",
+        );
+      });
     },
   };
-  let prom = watch
-    ? esbuild.context(esbuildOpts).then((context) => {
-        context.watch();
-      })
-    : esbuild.build(esbuildOpts);
-  prom.catch((err) => {
+  buildWebInspector({
+    minify: shouldMinify,
+    watch: shouldWatch,
+    plugins: [consolePlugin],
+    deviceScriptUrl,
+    inspectorDebuggerUrl,
+  }).catch((err) => {
     console.error(
       `\x1b[31m[${getHumanReadableHours()}]\x1b[0m Inspector build failed:`,
       err,
     );
     process.exit(1);
   });
+}
+
+/**
+ * Build the inspector with the given options.
+ * @param {Object} options
+ * @param {string} options.inspectorDebuggerUrl - URL to contact the RxPaired
+ * server.
+ * @param {string|null|undefined} [options.deviceScriptUrl] - URL where the
+ * RxPaired client script may be fetched.
+ * @param {boolean|null|undefined} [options.noPassword] - If `true` the
+ * password page will never be displayed.
+ * @param {boolean} [options.minify] - If `true`, the output will be minified.
+ * @param {boolean} [options.watch] - If `true`, the files involved
+ * will be watched and the code re-built each time one of them changes.
+ * @param {Array|undefined} [plugins]
+ * @returns {Promise}
+ */
+export default function buildWebInspector(options) {
+  const minify = !!options.minify;
+  const watch = !!options.watch;
+  const esbuildOpts = {
+    entryPoints: [path.join(currentDirName, "src", "index.ts")],
+    bundle: true,
+    minify,
+    plugins: options.plugins,
+    outfile: path.join(currentDirName, "inspector.js"),
+    define: {
+      _INSPECTOR_DEBUGGER_URL_: JSON.stringify(options.inspectorDebuggerUrl),
+      __DEVICE_SCRIPT_URL__: JSON.stringify(options.deviceScriptUrl ?? null),
+      __DISABLE_PASSWORD__: JSON.stringify(options.noPassword ?? false),
+    },
+  };
+  return watch
+    ? esbuild.context(esbuildOpts).then((context) => {
+        context.watch();
+      })
+    : esbuild.build(esbuildOpts);
 }
 
 /**

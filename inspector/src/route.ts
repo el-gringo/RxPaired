@@ -1,4 +1,9 @@
-import { ConfigState, MODULE_CONFIG_LS_ITEM, STATE_PROPS } from "./constants";
+import {
+  ConfigState,
+  DISABLE_PASSWORD,
+  MODULE_CONFIG_LS_ITEM,
+  STATE_PROPS,
+} from "./constants";
 import ObservableState, { UPDATE_TYPE } from "./observable_state";
 import generateLiveDebuggingPage from "./pages/live_debugging";
 import generatePasswordPage from "./pages/password";
@@ -132,13 +137,13 @@ export default function route() {
     currentPageCleanUp = generatePasswordPage();
     return;
   }
-  const password = localStorage.getItem("passv1");
-  if (password === null) {
+  const password = DISABLE_PASSWORD ? null : localStorage.getItem("passv1");
+  if (!DISABLE_PASSWORD && password === null) {
     currentPageCleanUp = generatePasswordPage();
   } else if (pageInfo.isPostDebugger) {
     currentPageCleanUp = generatePostDebuggerPage(configState);
   } else if (pageInfo.tokenId === null) {
-    currentPageCleanUp = generateTokenPage(password);
+    currentPageCleanUp = generateTokenPage(password ?? "");
   } else {
     if (!isTokenValid(pageInfo.tokenId)) {
       const error = new Error(
@@ -147,14 +152,14 @@ export default function route() {
       const errorDiv = document.createElement("div");
       displayError(errorDiv, error, true);
       document.body.appendChild(errorDiv);
-      const tokenPageCleanUp = generateTokenPage(password);
+      const tokenPageCleanUp = generateTokenPage(password ?? "");
       currentPageCleanUp = () => {
         document.body.removeChild(errorDiv);
         tokenPageCleanUp();
       };
     } else {
       currentPageCleanUp = generateLiveDebuggingPage(
-        password,
+        password ?? "",
         pageInfo.tokenId,
         configState,
       );

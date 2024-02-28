@@ -1,6 +1,7 @@
 import strHtml from "str-html";
 import {
   ConfigState,
+  DISABLE_PASSWORD,
   InspectorState,
   LogViewState,
   SERVER_URL,
@@ -299,12 +300,16 @@ function createLiveDebuggerHeaderElement(
   return strHtml`<div class="header">
     <div class="token-title">
       <span class="header-item page-title">${[
-        strHtml`<a href=${generatePageUrl({
-          tokenId: null,
-          forcePassReset: true,
-          isPostDebugger: false,
-        })}>Password</a>`,
-        " > ",
+        DISABLE_PASSWORD
+          ? null
+          : [
+              strHtml`<a href=${generatePageUrl({
+                tokenId: null,
+                forcePassReset: true,
+                isPostDebugger: false,
+              })}>Password</a>`,
+              " > ",
+            ],
         strHtml`<a href=${generatePageUrl({
           tokenId: null,
           forcePassReset: false,
