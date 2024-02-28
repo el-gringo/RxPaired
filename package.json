@@ -1,10 +1,12 @@
 {
   "name": "rx-paired",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": " A very lightweight, RxPlayer-specialized, remote inspector ",
   "type": "module",
   "main": "./rx-paired.mjs",
-  "bin": "./rx-paired.mjs",
+  "bin": {
+    "rx-paired": "./rx-paired.mjs"
+  },
   "scripts": {
     "fmt": "prettier --write .",
     "fmt:check": "prettier . --check",
@@ -23,6 +25,7 @@
   "homepage": "https://github.com/canalplus/RxPaired#readme",
   "dependencies": {
     "esbuild": "^0.20.1",
+    "http-server": "^14.1.1",
     "str-html": "^0.2.0",
     "ws": "^8.16.0"
   },
