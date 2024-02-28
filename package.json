@@ -1,10 +1,10 @@
 {
   "name": "rx-paired",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": " A very lightweight, RxPlayer-specialized, remote inspector ",
   "type": "module",
-  "main": "rx-paired.mjs",
-  "bin": "rx-paired.mjs",
+  "main": "./rx-paired.mjs",
+  "bin": "./rx-paired.mjs",
   "scripts": {
     "fmt": "prettier --write .",
     "fmt:check": "prettier . --check",
