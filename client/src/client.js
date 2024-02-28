@@ -21,7 +21,7 @@ const __FORCED_SERVER_URL__ = "";
 
 function init(currentScriptSrc, playerClass) {
   let wsUrl = _DEVICE_DEBUGGER_URL_;
-  if (__FORCED_SERVER_URL__ === "") {
+  if (__FORCED_SERVER_URL__ !== "") {
     if (/^https?:\/\//i.test(__FORCED_SERVER_URL__)) {
       wsUrl = "ws" + __FORCED_SERVER_URL__.substring(4);
     } else {
