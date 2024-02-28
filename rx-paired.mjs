@@ -14,7 +14,7 @@ import {
   DEFAULT_INSPECTOR_MESSAGE_LIMIT,
   DEFAULT_LOG_FILE_PATH,
 } from "./server/build/constants.js";
-import RxPairedServer from "./server/build/main.js";
+import RxPairedServer from "./server/RxPaired-server.bundle.mjs";
 import buildClient from "./client/build.mjs";
 import buildInspector from "./inspector/build.mjs";
 import startStaticHttpServer from "./utils/static_http_server.mjs";

@@ -22,7 +22,8 @@
   },
   "homepage": "https://github.com/canalplus/RxPaired#readme",
   "dependencies": {
-    "esbuild": "^0.20.1"
+    "esbuild": "^0.20.1",
+    "ws": "^8.16.0"
   },
   "devDependencies": {
     "prettier": "3.0.1",

@@ -10,7 +10,6 @@
 
 /server/node_modules/
 /server/src/
-/server/RxPaired-server.bundle.mjs
 /server/server-logs.txt
 /server-logs.txt
 /server/logs-*.txt

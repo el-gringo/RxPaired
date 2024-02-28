@@ -14,9 +14,6 @@
   },
   "author": "peaberberian",
   "license": "MIT",
-  "dependencies": {
-    "ws": "^8.16.0"
-  },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^25.0.7",
     "@rollup/plugin-node-resolve": "^15.2.3",
