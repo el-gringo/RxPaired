@@ -24,62 +24,58 @@ const DEFAULT_STATIC_SERVER_PORT = 8695;
 
 const currentDirName = getCurrentDirectoryName();
 
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  // The script has been run directly
-
-  const { argv } = process;
-  if (argv.includes("-h") || argv.includes("--help")) {
-    displayHelp();
-    process.exit(0);
-  }
-
-  let password = null;
-  let noInspector = false;
-  let inspectorPort;
-  let httpPort;
-  let devicePort;
-
-  for (let i = 2; i < argv.length; i++) {
-    const arg = argv[i].trim();
-    switch (arg) {
-      case "--device-port":
-        i++;
-        devicePort = checkIntArg(arg, argv[i]);
-        break;
-      case "--inspector-port":
-        i++;
-        inspectorPort = checkIntArg(arg, argv[i]);
-        break;
-      case "--http-port":
-        i++;
-        httpPort = checkIntArg(arg, argv[i]);
-        break;
-      case "--no-inspector":
-        noInspector = true;
-        break;
-      case "--password":
-        i++;
-        if (argv[i] === undefined) {
-          console.error(`Missing password argument for "--password" option.`);
-          process.exit(1);
-        } else if (!/^[A-Za-z0-9]+$/.test(argv[i])) {
-          console.error(
-            `Invalid password argument for "--password" option. ` +
-              `Must be only alphanumeric characters, got "${argv[i]}"`,
-          );
-          process.exit(1);
-        }
-        password = argv[i];
-        break;
-
-      default:
-        console.error(`Unknown option: "${arg}"`);
-        process.exit(1);
-    }
-  }
-
-  startRxPaired({ password, devicePort, inspectorPort, noInspector, httpPort });
+const { argv } = process;
+if (argv.includes("-h") || argv.includes("--help")) {
+  displayHelp();
+  process.exit(0);
 }
+
+let password = null;
+let noInspector = false;
+let inspectorPort;
+let httpPort;
+let devicePort;
+
+for (let i = 2; i < argv.length; i++) {
+  const arg = argv[i].trim();
+  switch (arg) {
+    case "--device-port":
+      i++;
+      devicePort = checkIntArg(arg, argv[i]);
+      break;
+    case "--inspector-port":
+      i++;
+      inspectorPort = checkIntArg(arg, argv[i]);
+      break;
+    case "--http-port":
+      i++;
+      httpPort = checkIntArg(arg, argv[i]);
+      break;
+    case "--no-inspector":
+      noInspector = true;
+      break;
+    case "--password":
+      i++;
+      if (argv[i] === undefined) {
+        console.error(`Missing password argument for "--password" option.`);
+        process.exit(1);
+      } else if (!/^[A-Za-z0-9]+$/.test(argv[i])) {
+        console.error(
+          `Invalid password argument for "--password" option. ` +
+            `Must be only alphanumeric characters, got "${argv[i]}"`,
+        );
+        process.exit(1);
+      }
+      password = argv[i];
+      break;
+
+    default:
+      console.error(`Unknown option: "${arg}"`);
+      process.exit(1);
+  }
+}
+
+startRxPaired({ password, devicePort, inspectorPort, noInspector, httpPort });
 
 export default function startRxPaired({
   password,
