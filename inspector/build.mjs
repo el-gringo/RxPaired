@@ -2,8 +2,8 @@
 
 import path from "path";
 import process from "process";
-import esbuild from "esbuild";
 import { fileURLToPath } from "url";
+import esbuild from "esbuild";
 
 const currentDirName = getCurrentDirectoryName();
 

@@ -42,11 +42,11 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     switch (arg) {
       case "--device-port":
         i++;
-        inspectorPort = checkIntArg(arg, argv[i]);
+        devicePort = checkIntArg(arg, argv[i]);
         break;
       case "--inspector-port":
         i++;
-        devicePort = checkIntArg(arg, argv[i]);
+        inspectorPort = checkIntArg(arg, argv[i]);
         break;
       case "--http-port":
         i++;
