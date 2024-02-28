@@ -16,6 +16,9 @@ const NO_LOG_SELECTED_MSG =
 const LOG_SELECTED_MSG = "A log has been time-travelled to.";
 const timeRegex = /^(\d+(?:.)?(?:\d+)?) (.*)$/s;
 
+const MAX_LOGS_TO_PUSH_AT_ONCE = 2000;
+const BULK_LOGS_DISPLAY_TIMEOUT = 75;
+
 /**
  * @param {Object} args
  */
@@ -51,6 +54,7 @@ export default function LogModule({
    */
   const logHeaderElt = strHtml`<div class="log-header"/>`;
   logHeaderElt.style.borderBottom = "1px dashed #878787";
+  logHeaderElt.style.lineHeight = "1.3em";
   displayNoLogHeader();
 
   /** Wrapper elements which will contain log messages. */
@@ -106,7 +110,11 @@ export default function LogModule({
       minimumDateInputElt.style.display = "none";
       maximumDateInputElt.style.display = "none";
     }
-    reloadLogsHistory();
+    onLogsHistoryChange(
+      UPDATE_TYPE.REPLACE,
+      logView.getCurrentState(STATE_PROPS.LOGS_HISTORY),
+      true,
+    );
   };
   onDestroyFns.push(
     configState.subscribe(
@@ -322,11 +330,15 @@ export default function LogModule({
 
   /** Display header for when a log is currently selected. */
   function displayLogSelectedHeader() {
-    logHeaderElt.textContent = LOG_SELECTED_MSG;
-    const clickSpan = strHtml`<span class="emphasized">${[
+    logHeaderElt.innerHTML = "";
+    const selectedEltInScreen = getSelectedElement();
+    const text = strHtml`<span>${LOG_SELECTED_MSG}</span>`;
+    text.style.marginLeft = "5px";
+    logHeaderElt.appendChild(text);
+    const unselectSpan = strHtml`<span class="emphasized">${[
       "Click on the log again or here to unselect",
     ]}</span>`;
-    clickSpan.onclick = function () {
+    unselectSpan.onclick = function () {
       logView.updateState(
         STATE_PROPS.SELECTED_LOG_ID,
         UPDATE_TYPE.REPLACE,
@@ -338,9 +350,72 @@ export default function LogModule({
         selectedElt = null;
       }
     };
-    clickSpan.style.cursor = "pointer";
-    clickSpan.style.marginLeft = "5px";
-    logHeaderElt.appendChild(clickSpan);
+    unselectSpan.style.cursor = "pointer";
+    unselectSpan.style.marginLeft = "5px";
+    logHeaderElt.appendChild(strHtml`<br>`);
+    logHeaderElt.appendChild(unselectSpan);
+
+    const selectedLogId = logView.getCurrentState(STATE_PROPS.SELECTED_LOG_ID);
+    if (selectedLogId !== undefined) {
+      const logs = logView.getCurrentState(STATE_PROPS.LOGS_HISTORY);
+      const log = logs?.find((l) => l[1] === selectedLogId);
+      if (log !== undefined) {
+        const match = log[0].match(timeRegex);
+        if (match !== null) {
+          const timestamp = Number(match[1]);
+          let displayedTimestamp: number | string = timestamp;
+          if (
+            configState.getCurrentState(STATE_PROPS.TIME_REPRESENTATION) ===
+            "date"
+          ) {
+            const dateAtPageLoad =
+              logView.getCurrentState(STATE_PROPS.DATE_AT_PAGE_LOAD) ?? 0;
+            const dateNum = Number(match[1]) + dateAtPageLoad;
+            displayedTimestamp = convertDateToLocalISOString(new Date(dateNum));
+          }
+          const goToMinimumTimeSpan = strHtml`<span class="emphasized">Minimum time</span>`;
+          const goToMaximumTimeSpan = strHtml`<span class="emphasized">Maximum time</span>`;
+          const dateNavigationSpan = strHtml`<span>${[
+            `Set date (${displayedTimestamp}) as: `,
+            goToMinimumTimeSpan,
+            " / ",
+            goToMaximumTimeSpan,
+          ]}</span>`;
+          goToMinimumTimeSpan.style.cursor = "pointer";
+          goToMaximumTimeSpan.style.cursor = "pointer";
+          dateNavigationSpan.style.marginLeft = "5px";
+          goToMinimumTimeSpan.onclick = () => {
+            logView.updateState(
+              STATE_PROPS.LOG_MIN_TIMESTAMP_DISPLAYED,
+              UPDATE_TYPE.REPLACE,
+              timestamp,
+            );
+            logView.commitUpdates();
+          };
+          goToMaximumTimeSpan.onclick = () => {
+            logView.updateState(
+              STATE_PROPS.LOG_MAX_TIMESTAMP_DISPLAYED,
+              UPDATE_TYPE.REPLACE,
+              timestamp,
+            );
+            logView.commitUpdates();
+          };
+          logHeaderElt.appendChild(strHtml`<br>`);
+          logHeaderElt.appendChild(dateNavigationSpan);
+        }
+      }
+    }
+
+    if (selectedEltInScreen !== null) {
+      const scrollIntoViewSpan = strHtml`<span class="emphasized">Scroll into view</span>`;
+      scrollIntoViewSpan.style.cursor = "pointer";
+      scrollIntoViewSpan.style.marginLeft = "5px";
+      logHeaderElt.appendChild(strHtml`<br>`);
+      logHeaderElt.appendChild(scrollIntoViewSpan);
+      scrollIntoViewSpan.onclick = function () {
+        focusSelectedIntoView();
+      };
+    }
     logHeaderElt.classList.add("important-bg");
   }
 
@@ -363,21 +438,24 @@ export default function LogModule({
     return "no-log";
   }
 
-  function reloadLogsHistory() {
-    onLogsHistoryChange(
-      UPDATE_TYPE.REPLACE,
-      logView.getCurrentState(STATE_PROPS.LOGS_HISTORY),
-    );
-  }
   /**
    * Callback triggered when the global history of logs changes.
    * @param {string} updateType
    * @param {Array.<string>|undefined} values
+   * @param {boolean} [keepScrollPosition] - If `true`, the current scroll
+   * position in term of percentage will be kept as is.
    */
   function onLogsHistoryChange(
     updateType: UPDATE_TYPE | "initial",
     values: Array<[string, number]> | undefined,
+    keepScrollPosition?: boolean,
   ) {
+    let scrollPercent: number | undefined;
+    if (keepScrollPosition === true && !isLogBodyScrolledToBottom()) {
+      scrollPercent =
+        logBodyElt.scrollTop /
+        (logBodyElt.scrollHeight - logBodyElt.clientHeight);
+    }
     if (values === undefined) {
       if (timeoutInterval !== undefined) {
         clearTimeout(timeoutInterval);
@@ -411,7 +489,7 @@ export default function LogModule({
       const filter = createFilterFunction();
       filtered = values.filter(([str]) => filter(str));
     }
-    displayNewLogs(filtered, isResetting);
+    displayNewLogs(filtered, isResetting, scrollPercent);
   }
 
   /**
@@ -431,9 +509,7 @@ export default function LogModule({
     }
 
     if (hasLogSelected) {
-      if (headerType !== "selected") {
-        displayLogSelectedHeader();
-      }
+      displayLogSelectedHeader();
     } else if (timeoutInterval !== undefined) {
       if (headerType !== "loading") {
         displayLoadingHeader();
@@ -459,10 +535,14 @@ export default function LogModule({
    * (as focus is usually set on the last logs which would there have been added
    * at the beginning of the call) but can only worker when re-initializing
    * logs. This can e.g. be set when setting a filter or when post-debugging.
+   * @param {number|undefined} scrollPercent - If set, the percentage scroll
+   * position (`0` being at the very top and `1` being at the very bottom) the
+   * scroll position should be maintained at.
    */
   function displayNewLogs(
     newLogs: Array<[string, number]>,
     isResetting: boolean,
+    scrollPercent: number | undefined,
   ): void {
     if (isResetting && timeoutInterval !== undefined) {
       clearTimeout(timeoutInterval);
@@ -474,19 +554,21 @@ export default function LogModule({
       newLogs.length > maxNbDisplayedLogs
         ? newLogs.slice(maxNbDisplayedLogs)
         : newLogs;
-    if (isResetting && logsToDisplay.length > 500) {
+    if (isResetting && logsToDisplay.length > MAX_LOGS_TO_PUSH_AT_ONCE) {
       const nextIterationLogs = logsToDisplay.slice(
         0,
-        logsToDisplay.length - 500,
+        logsToDisplay.length - MAX_LOGS_TO_PUSH_AT_ONCE,
       );
       if (nextIterationLogs.length > 0) {
         displayLoadingHeader();
         timeoutInterval = setTimeout(() => {
           timeoutInterval = undefined;
-          displayNewLogs(nextIterationLogs, isResetting);
-        }, 50);
+          displayNewLogs(nextIterationLogs, isResetting, scrollPercent);
+        }, BULK_LOGS_DISPLAY_TIMEOUT);
       }
-      logsToDisplay = logsToDisplay.slice(logsToDisplay.length - 500);
+      logsToDisplay = logsToDisplay.slice(
+        logsToDisplay.length - MAX_LOGS_TO_PUSH_AT_ONCE,
+      );
     }
 
     if (logsToDisplay.length >= 10) {
@@ -529,6 +611,10 @@ export default function LogModule({
       }
     }
 
+    if (logContainerElt.parentElement !== logBodyElt) {
+      logBodyElt.appendChild(logContainerElt);
+    }
+
     if (timeoutInterval === undefined) {
       const headerType = getHeaderType();
       if (selectedElt === null && logContainerElt.childNodes.length === 0) {
@@ -539,16 +625,33 @@ export default function LogModule({
         if (headerType !== "no-selected") {
           displayNoLogSelectedHeader();
         }
-      } else if (headerType !== "selected") {
+      } else {
         displayLogSelectedHeader();
       }
     }
 
-    if (logContainerElt.parentElement !== logBodyElt) {
-      logBodyElt.appendChild(logContainerElt);
-    }
-    if (wasScrolledToBottom) {
+    if (scrollPercent !== undefined) {
+      logBodyElt.scrollTop =
+        (logBodyElt.scrollHeight - logBodyElt.clientHeight) * scrollPercent;
+    } else if (wasScrolledToBottom) {
       logBodyElt.scrollTop = logBodyElt.scrollHeight;
+    }
+  }
+
+  function getSelectedElement(): HTMLElement | null {
+    const focused = logBodyElt.getElementsByClassName("focused-bg")[0];
+    return focused !== undefined &&
+      focused instanceof HTMLElement &&
+      focused.parentElement !== null
+      ? focused
+      : null;
+  }
+
+  function focusSelectedIntoView() {
+    const focused = getSelectedElement();
+    if (focused !== null && focused.parentElement !== null) {
+      logBodyElt.scrollTop =
+        focused.offsetTop - focused.parentElement.offsetTop;
     }
   }
 
@@ -640,6 +743,7 @@ export default function LogModule({
     onLogsHistoryChange(
       "initial",
       logView.getCurrentState(STATE_PROPS.LOGS_HISTORY) ?? [],
+      true,
     );
   }
 
@@ -716,6 +820,7 @@ export default function LogModule({
     onLogsHistoryChange(
       "initial",
       logView.getCurrentState(STATE_PROPS.LOGS_HISTORY) ?? [],
+      true,
     );
   }
 
