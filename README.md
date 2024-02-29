@@ -37,8 +37,8 @@ Its key features are:
 
 - [Quick start](#quick-start)
 - [What is it?](#what-is-it)
+- [How to use it?](#how-to-use-it)
 - [How does it work?](#how-it-works)
-- [How to run it?](#how-to-run-it)
 - [Why creating this tool?](#why-creating-this-tool)
 
 <a class="anchor" href="#quick-start"></a>
@@ -109,12 +109,180 @@ This web page also automatically exploits those logs to produce helpful graphs a
 metrics about what's currently happening with the player: how much data is buffered, of
 what audio and video quality etc.
 
-You can also emit instructions JavaScript instructions from the webpage to the device, as
-well as get responses back.
+You can also emit JavaScript instructions from the webpage to the device, as well
+as get responses back.
 
 Yet, this tool was also written with modularity in mind. It should thus be very
 easy to remove the RxPlayer "modules" from the web inspector of RxPaired, and replace
 them by another logic, even for other usages than for media streaming.
+
+<a class="anchor" href="#how-to-use-it"></a>
+
+## How to use it?
+
+### Step 1 (simple): Running only the log server part
+
+If you just want to obtain formatted logs and don't care about the inspector
+(the remote debugger part), it is much simpler to just run RxPaired with the
+`--no-inspector` option.
+
+First make sure `npm` (node package manager) is installed and run in your
+terminal:
+
+```sh
+npx rx-paired --no-inspector
+```
+
+This will just start a server listening for logs and make the client script
+(usage described below) directly accessible, either through an URL or by
+copy-pasting the file.
+
+### Step 1 (alternate): Running the full package, with a remote inspector
+
+The full RxPaired tool also includes its "inspector", a remote debugger
+displaying metrics about playback and allowing you to send instructions to the
+device.
+
+To run the full RxPaired package with the inspector included, enter in a
+terminal:
+
+```sh
+npx rx-paired
+```
+
+You can then load RxPaired's inspector pages by going to the outputed URL
+([https://127.0.0.1:8695](https://127.0.0.1:8695) by default).
+You will have instructions allowing to generate a debugging "token" (multiple
+tokens can also be created to allow inspection of multiple devices
+simultaneously) and then to obtain the client script (more details on how to use
+it below).
+
+### Step 2: Linking the client script to your application
+
+In step 1, you should either have obtained an URL, a file, or both to a "client
+script". It will now need to be added to your application so it can send logs.
+
+This client script monkey-patches some logging and networking logic to redirect
+logs to RxPaired's server through a WebSocket connection. To function optimally,
+it needs to be loaded before all other code in your application.
+
+We thus recommend you to link this client script through a `<script>` tag
+inserted before all other `<script>` tags from the page you're debugging.
+
+For example if your HTML page looks like this:
+
+```html
+<html>
+    <head>
+        <title>My Page</title>
+        <script src="./my-bundle.js"></script>
+        <script src="./other-dependency.js"></script>
+    </head>
+    <body>
+        <!-- ... -->
+    </body>
+</html>
+```
+
+And if your client script can be accessed through the url
+`http://127.0.0.1/my-script-url`, you can write:
+
+```html
+<html>
+    <head>
+        <title>My Page</title>
+        <script src="http://127.0.0.1/my-script-url"></script>
+        <script src="./my-bundle.js"></script>
+        <script src="./other-dependency.js"></script>
+    </head>
+    <body>
+        <!-- ... -->
+    </body>
+</html>
+```
+
+If you want to rely on the client script file instead, first make sure you
+followed the corresponding instructions if you went through the inspector (this
+does not apply if you are in `--no-inspector` mode) and then copy and paste the
+script's content at the same place:
+
+```html
+<html>
+    <head>
+        <title>My Page</title>
+        <script>
+            // THE CLIENT SCRIPT'S CODE GOES HERE
+        </script>
+        <script src="./my-bundle.js"></script>
+        <script src="./other-dependency.js"></script>
+    </head>
+    <body>
+        <!-- ... -->
+    </body>
+</html>
+```
+
+Once any of those solutions is implemented, you can launch your application.
+A log file should now be created locally containing logs from it, and, if
+you ran the inspector, you should now be able to perform live debugging on
+it.
+
+### NOTE: When debugging on another device
+
+In previous examples logs are sent and the client script is fetched through HTTP
+connections, not HTTPS ones.
+This can become problematic especially when debugging remote devices because
+HTTP connections will here most likely be blocked.
+
+RxPaired exposes at most three HTTP ports:
+
+1. a port to communicat with inspectors (unless you ran in `--no-inspector`
+   mode)
+2. an HTTP port to serve both the inspector pages and client script.
+3. a port listening for logs sent by your application
+
+The inspector port should not cause any issue as inspector pages are generally
+only accessed locally.
+Also, the HTTP server is not mandatory as the client script can just be
+copy-pasted in your application's HTML page (instead of fetching it through an
+URL).
+However, the third port (the one listening for logs, `22626` by default) is
+used inside the client script and thus would need to be accessed through a
+secure connection.
+
+Thankfully, [easy and free solutions exist](https://github.com/anderspitman/awesome-tunneling?tab=readme-ov-file)
+to proxify local HTTP servers from a remote HTTPS URL.
+[`ngrok`](https://ngrok.com/docs/getting-started/) for example is known to be
+functional but may necessitate you to login first. Other solutions should work
+but weren't tested by us (most notably WebSocket connections have to be properly
+redirected).
+
+When using such a solution, you will need to perform a small update on the
+client script: the `__FORCED_SERVER_URL__` variable on top of this file should
+now be set to the new HTTPS URL redirecting to your local port which listens for
+device logs (`22626` by default).
+
+The client script can then be copy-pasted in your application's page as
+described in step 2 (if you're relying on an inspector, don't forget to also
+update `__FORCED_TOKEN__`).
+
+### NOTE: For more advanced usages
+
+If you plan to make RxPaired more globally accessible through a Web Server,
+building independently its three modules is more configurable:
+
+1. start RxPaired-server in `./server` with the wanted options
+2. build and optionally serve the RxPaired-client script that will be put on the device
+   (instructions and files in `./client`)
+3. build and serve the RxPaired-inspector web page (instructions and files in
+   `./inspector`).
+
+You can look at how to do just that by looking at the `README.md` file of each
+of those subdirectories.
+
+For now, this will require you to first either clone the repository or to go to
+the directory `npm` installed RxPaired in. We're also thinking of easier
+solutions for doing that in the future.
 
 <a class="anchor" href="#how-it-works"></a>
 
@@ -164,27 +332,6 @@ RxPaired comes in three parts:
    inspector connections, too many wrong password, too many WebSocket messages sent),
    create and keep log files for each inspected devices, give a maximum lifetime for
    each token, change the ports it listens to etc.
-
-<a class="anchor" href="#how-to-run-it"></a>
-
-## How to run it?
-
-To run RxPaired you have to:
-
-1. start RxPaired-server in `./server` with the wanted options
-2. build and optionally serve the RxPaired-client script that will be put on the device
-   (instructions and files in `./client`)
-3. build and serve the RxPaired-inspector web page (instructions and files in
-   `./inspector`).
-
-You can look at how to do just that by looking at the `README.md` file of each of those
-subdirectories.
-
-You can run the server and client on your own PC or on a server.
-If you want to use HTTPS / WSS, which might be required on HTTPS applications, you'll need
-to perform HTTPS tunnelling to that server. This can either be performed through softwares
-like Apache or Nginx through configuration or by using a tunnelling tool like
-[`ngrok`](https://ngrok.com/).
 
 <a class="anchor" href="#why-creating-this-tool"></a>
 
