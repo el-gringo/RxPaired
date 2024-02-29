@@ -18,6 +18,9 @@ const __FORCED_TOKEN__ = "";
  * +-------------------------------------------------------------------------+
  */
 const __FORCED_SERVER_URL__ = "";
+/*!
+ *
+ */
 
 function init(currentScriptSrc, playerClass) {
   let wsUrl = _DEVICE_DEBUGGER_URL_;
@@ -131,7 +134,7 @@ function init(currentScriptSrc, playerClass) {
       this.addEventListener("load", function () {
         formatAndSendLog(
           "Network",
-          `Loaded ${method} XHR from: ${url} ` + `(status: ${this.status})`,
+          `Loaded ${method} XHR from: ${url} ` + `(status: ${this.status})`
         );
       });
       this.addEventListener("error", function () {
@@ -186,17 +189,17 @@ function init(currentScriptSrc, playerClass) {
         (res) => {
           formatAndSendLog(
             "Network",
-            `Loaded ${method} fetch from: ${url} ` + `(status: ${res.status})`,
+            `Loaded ${method} fetch from: ${url} ` + `(status: ${res.status})`
           );
           return res;
         },
         (err) => {
           formatAndSendLog(
             "Network",
-            `Errored/Aborted ${method} fetch from: ${url}`,
+            `Errored/Aborted ${method} fetch from: ${url}`
           );
           throw err;
-        },
+        }
       );
     };
     spyRemovers.push(function () {
@@ -336,7 +339,7 @@ function init(currentScriptSrc, playerClass) {
           Object.keys(value).forEach(function (name) {
             newVal[name] = recursivelyDecycle(
               value[name],
-              path + "[" + JSON.stringify(name) + "]",
+              path + "[" + JSON.stringify(name) + "]"
             );
           });
         }
@@ -413,7 +416,7 @@ function init(currentScriptSrc, playerClass) {
     } catch (formattingError) {
       console.error(
         "Unrecognized message format received from WebSocket: " +
-          "not an UTF-8-encoded JSON",
+          "not an UTF-8-encoded JSON"
       );
       return;
     }
@@ -462,7 +465,7 @@ function init(currentScriptSrc, playerClass) {
           error: { message: errorMessage, name: errorName },
           id: instructionId,
         },
-      }),
+      })
     );
   }
 
@@ -474,7 +477,7 @@ function init(currentScriptSrc, playerClass) {
           data: processEvalReturn(val),
           id: instructionId,
         },
-      }),
+      })
     );
   }
 

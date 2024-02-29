@@ -103,6 +103,7 @@ export default function buildClient(options) {
     entryPoints: [path.join(currentDirName, "src", "client.js")],
     bundle: true,
     minifySyntax: minify,
+    minifyWhitespace: minify,
     target: "es6",
     outfile: path.join(currentDirName, "client.js"),
     legalComments: "inline",
