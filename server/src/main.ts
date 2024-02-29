@@ -44,7 +44,8 @@ export default async function RxPairedServer(options: ParsedOptions) {
   }
 
   const deviceSocket = new WebSocketServer({ port: options.devicePort });
-  const htmlInspectorSocket = new WebSocketServer({
+  const htmlInspectorSocket = options.inspectorPort < 0 ?
+    null : new WebSocketServer({
     port: options.inspectorPort,
   });
 
@@ -261,228 +262,230 @@ export default async function RxPairedServer(options: ParsedOptions) {
     });
   });
 
-  htmlInspectorSocket.on("connection", (ws, req) => {
-    if (req.url === undefined) {
-      ws.close();
-      return;
-    }
-    const urlParts = parseInspectorUrl(req.url, options.password);
-    const receivedPassword = urlParts.password ?? "";
-    if (receivedPassword !== (options.password ?? "")) {
-      writeLog(
-        "warn",
-        "Received inspector request with invalid password: " + receivedPassword,
-        { address: req.socket.remoteAddress },
-      );
-      ws.close();
-      checkers.checkBadPasswordLimit();
-      return;
-    }
-
-    // Special token "list" request:
-    // Regularly returns the list of currently active tokens
-    if (urlParts.command === "list") {
-      writeLog("log", "Received inspector request for list of tokens", {
-        address: req.socket.remoteAddress,
-      });
-      const itv = setInterval(sendCurrentListOfTokens, 3000);
-      sendCurrentListOfTokens();
-      ws.onclose = () => {
-        clearInterval(itv);
-      };
-      function sendCurrentListOfTokens() {
-        checkers.forceExpirationCheck();
-        const now = performance.now();
-        ws.send(
-          JSON.stringify({
-            isNoTokenEnabled: !options.disableNoToken,
-            tokenList: activeTokensList.getList().map((t) => {
-              return {
-                tokenId: t.tokenId,
-                date: t.date,
-                timestamp: t.timestamp,
-                isPersistent: t.tokenType === TokenType.Persistent,
-                msUntilExpiration: Math.max(t.getExpirationDelay(now), 0),
-              };
-            }),
-          }),
+  if (htmlInspectorSocket !== null) {
+    htmlInspectorSocket.on("connection", (ws, req) => {
+      if (req.url === undefined) {
+        ws.close();
+        return;
+      }
+      const urlParts = parseInspectorUrl(req.url, options.password);
+      const receivedPassword = urlParts.password ?? "";
+      if (receivedPassword !== (options.password ?? "")) {
+        writeLog(
+          "warn",
+          "Received inspector request with invalid password: " + receivedPassword,
+          { address: req.socket.remoteAddress },
         );
+        ws.close();
+        checkers.checkBadPasswordLimit();
+        return;
       }
-      return;
-    }
 
-    const tokenId = urlParts.tokenId;
-    if (tokenId === undefined) {
-      ws.close();
-      return;
-    }
+      // Special token "list" request:
+      // Regularly returns the list of currently active tokens
+      if (urlParts.command === "list") {
+        writeLog("log", "Received inspector request for list of tokens", {
+          address: req.socket.remoteAddress,
+        });
+        const itv = setInterval(sendCurrentListOfTokens, 3000);
+        sendCurrentListOfTokens();
+        ws.onclose = () => {
+          clearInterval(itv);
+        };
+        function sendCurrentListOfTokens() {
+          checkers.forceExpirationCheck();
+          const now = performance.now();
+          ws.send(
+            JSON.stringify({
+              isNoTokenEnabled: !options.disableNoToken,
+              tokenList: activeTokensList.getList().map((t) => {
+                return {
+                  tokenId: t.tokenId,
+                  date: t.date,
+                  timestamp: t.timestamp,
+                  isPersistent: t.tokenType === TokenType.Persistent,
+                  msUntilExpiration: Math.max(t.getExpirationDelay(now), 0),
+                };
+              }),
+            }),
+          );
+        }
+        return;
+      }
 
-    checkers.checkNewInspectorLimit();
-    if (tokenId.length > 100) {
-      writeLog(
-        "warn",
-        "Received inspector request with token too long: " +
-          String(tokenId.length),
-      );
-      ws.close();
-      return;
-    } else if (!/[a-z0-9]+/.test(tokenId)) {
-      writeLog("warn", "Received inspector request with invalid token.", {
+      const tokenId = urlParts.tokenId;
+      if (tokenId === undefined) {
+        ws.close();
+        return;
+      }
+
+      checkers.checkNewInspectorLimit();
+      if (tokenId.length > 100) {
+        writeLog(
+          "warn",
+          "Received inspector request with token too long: " +
+            String(tokenId.length),
+        );
+        ws.close();
+        return;
+      } else if (!/[a-z0-9]+/.test(tokenId)) {
+        writeLog("warn", "Received inspector request with invalid token.", {
+          tokenId,
+        });
+        ws.close();
+        return;
+      }
+
+      writeLog("log", "Inspector: Received authorized inspector connection.", {
+        address: req.socket.remoteAddress,
         tokenId,
+        command: urlParts.command,
       });
-      ws.close();
-      return;
-    }
 
-    writeLog("log", "Inspector: Received authorized inspector connection.", {
-      address: req.socket.remoteAddress,
-      tokenId,
-      command: urlParts.command,
-    });
+      const isPersistentTokenCreation = urlParts.command === "persist";
 
-    const isPersistentTokenCreation = urlParts.command === "persist";
+      let existingToken = activeTokensList.find(tokenId);
+      if (existingToken === undefined) {
+        writeLog("log", "Creating new token", {
+          tokenId,
+          remaining: activeTokensList.size() + 1,
+        });
+        existingToken = activeTokensList.create(
+          isPersistentTokenCreation
+            ? TokenType.Persistent
+            : TokenType.FromInspector,
+          tokenId,
+          options.historySize,
+          urlParts.expirationDelay ?? options.maxTokenDuration,
+        );
+      } else {
+        if (isPersistentTokenCreation) {
+          existingToken.tokenType = TokenType.Persistent;
+        }
+        if (urlParts.expirationDelay !== undefined) {
+          existingToken.updateExpirationDelay(urlParts.expirationDelay);
+        }
+        writeLog("log", "Adding new inspector to token.", { tokenId });
+      }
 
-    let existingToken = activeTokensList.find(tokenId);
-    if (existingToken === undefined) {
-      writeLog("log", "Creating new token", {
-        tokenId,
-        remaining: activeTokensList.size() + 1,
-      });
-      existingToken = activeTokensList.create(
-        isPersistentTokenCreation
-          ? TokenType.Persistent
-          : TokenType.FromInspector,
-        tokenId,
-        options.historySize,
-        urlParts.expirationDelay ?? options.maxTokenDuration,
-      );
-    } else {
       if (isPersistentTokenCreation) {
-        existingToken.tokenType = TokenType.Persistent;
-      }
-      if (urlParts.expirationDelay !== undefined) {
-        existingToken.updateExpirationDelay(urlParts.expirationDelay);
-      }
-      writeLog("log", "Adding new inspector to token.", { tokenId });
-    }
-
-    if (isPersistentTokenCreation) {
-      persistentTokensStorage.addToken(existingToken);
-    }
-
-    const pingInterval = setInterval(() => {
-      ws.send("ping");
-    }, 10000);
-    existingToken.inspectors.push({
-      webSocket: ws,
-      pingInterval,
-    });
-
-    sendMessageToInspector("ack", ws, req, tokenId);
-
-    const deviceInitData = existingToken.getDeviceInitData();
-    if (deviceInitData !== null) {
-      const { timestamp, dateMs } = deviceInitData;
-      const { history, maxHistorySize } = existingToken.getCurrentHistory();
-      const message = JSON.stringify({
-        type: "Init",
-        value: {
-          timestamp,
-          dateMs,
-          history,
-          maxHistorySize,
-        },
-      });
-      sendMessageToInspector(message, ws, req, tokenId);
-    }
-    checkers.forceExpirationCheck();
-
-    ws.on("message", (message) => {
-      checkers.checkInspectorMessageLimit();
-      /* eslint-disable-next-line @typescript-eslint/no-base-to-string */
-      const messageStr = message.toString();
-
-      if (messageStr === "pong") {
-        return;
+        persistentTokensStorage.addToken(existingToken);
       }
 
-      let messageObj;
-      try {
-        messageObj = JSON.parse(messageStr) as unknown;
-      } catch (err) {
-        writeLog("warn", "Could not parse message given by inspector.", {
-          address: req.socket.remoteAddress,
-          tokenId,
-          message: messageStr.length < 200 ? messageStr : undefined,
-        });
-      }
-      if (!isEvalMessage(messageObj)) {
-        writeLog("warn", "Unknown message type received by inspector", {
-          address: req.socket.remoteAddress,
-          tokenId,
-        });
-        return;
-      }
-      if (existingToken === undefined || existingToken.device === null) {
-        writeLog("warn", "Could not send eval message: no device connected", {
-          address: req.socket.remoteAddress,
-          tokenId,
-        });
-        return;
-      }
-
-      writeLog("log", "Eval message received by inspector.", {
-        address: req.socket.remoteAddress,
-        tokenId,
+      const pingInterval = setInterval(() => {
+        ws.send("ping");
+      }, 10000);
+      existingToken.inspectors.push({
+        webSocket: ws,
+        pingInterval,
       });
 
-      try {
-        existingToken.device.send(messageStr);
-      } catch (err) {
-        writeLog("warn", "Error while sending message to a device", {
-          tokenId,
-        });
-      }
-    });
+      sendMessageToInspector("ack", ws, req, tokenId);
 
-    ws.on("close", () => {
-      if (existingToken === undefined || tokenId === undefined) {
-        return;
+      const deviceInitData = existingToken.getDeviceInitData();
+      if (deviceInitData !== null) {
+        const { timestamp, dateMs } = deviceInitData;
+        const { history, maxHistorySize } = existingToken.getCurrentHistory();
+        const message = JSON.stringify({
+          type: "Init",
+          value: {
+            timestamp,
+            dateMs,
+            history,
+            maxHistorySize,
+          },
+        });
+        sendMessageToInspector(message, ws, req, tokenId);
       }
-      writeLog("log", "Inspector disconnected.", {
-        address: req.socket.remoteAddress,
-        tokenId,
-      });
-      const indexOfInspector = existingToken.inspectors.findIndex(
-        (obj) => obj.webSocket === ws,
-      );
-      if (indexOfInspector === -1) {
-        writeLog("warn", "Closing inspector not found.", { tokenId });
-        return;
-      }
-      clearInterval(existingToken.inspectors[indexOfInspector].pingInterval);
-      existingToken.inspectors.splice(indexOfInspector, 1);
-      if (
-        existingToken.tokenType !== TokenType.Persistent &&
-        existingToken.inspectors.length === 0 &&
-        existingToken.device === null
-      ) {
-        const indexOfToken = activeTokensList.findIndex(tokenId);
-        if (indexOfToken === -1) {
-          writeLog("warn", "Closing inspector's token not found.", { tokenId });
+      checkers.forceExpirationCheck();
+
+      ws.on("message", (message) => {
+        checkers.checkInspectorMessageLimit();
+        /* eslint-disable-next-line @typescript-eslint/no-base-to-string */
+        const messageStr = message.toString();
+
+        if (messageStr === "pong") {
           return;
         }
-        writeLog("log", "Removing token.", {
+
+        let messageObj;
+        try {
+          messageObj = JSON.parse(messageStr) as unknown;
+        } catch (err) {
+          writeLog("warn", "Could not parse message given by inspector.", {
+            address: req.socket.remoteAddress,
+            tokenId,
+            message: messageStr.length < 200 ? messageStr : undefined,
+          });
+        }
+        if (!isEvalMessage(messageObj)) {
+          writeLog("warn", "Unknown message type received by inspector", {
+            address: req.socket.remoteAddress,
+            tokenId,
+          });
+          return;
+        }
+        if (existingToken === undefined || existingToken.device === null) {
+          writeLog("warn", "Could not send eval message: no device connected", {
+            address: req.socket.remoteAddress,
+            tokenId,
+          });
+          return;
+        }
+
+        writeLog("log", "Eval message received by inspector.", {
+          address: req.socket.remoteAddress,
           tokenId,
-          remaining: activeTokensList.size() - 1,
         });
-        activeTokensList.removeIndex(indexOfToken);
-      }
+
+        try {
+          existingToken.device.send(messageStr);
+        } catch (err) {
+          writeLog("warn", "Error while sending message to a device", {
+            tokenId,
+          });
+        }
+      });
+
+      ws.on("close", () => {
+        if (existingToken === undefined || tokenId === undefined) {
+          return;
+        }
+        writeLog("log", "Inspector disconnected.", {
+          address: req.socket.remoteAddress,
+          tokenId,
+        });
+        const indexOfInspector = existingToken.inspectors.findIndex(
+          (obj) => obj.webSocket === ws,
+        );
+        if (indexOfInspector === -1) {
+          writeLog("warn", "Closing inspector not found.", { tokenId });
+          return;
+        }
+        clearInterval(existingToken.inspectors[indexOfInspector].pingInterval);
+        existingToken.inspectors.splice(indexOfInspector, 1);
+        if (
+          existingToken.tokenType !== TokenType.Persistent &&
+          existingToken.inspectors.length === 0 &&
+          existingToken.device === null
+        ) {
+          const indexOfToken = activeTokensList.findIndex(tokenId);
+          if (indexOfToken === -1) {
+            writeLog("warn", "Closing inspector's token not found.", { tokenId });
+            return;
+          }
+          writeLog("log", "Removing token.", {
+            tokenId,
+            remaining: activeTokensList.size() - 1,
+          });
+          activeTokensList.removeIndex(indexOfToken);
+        }
+      });
     });
-  });
-  logger.log(
-    `Emitting to web inspectors at ws://127.0.0.1:${options.inspectorPort}`,
-  );
+    logger.log(
+      `Emitting to web inspectors at ws://127.0.0.1:${options.inspectorPort}`,
+    );
+  }
   logger.log(
     `Listening for device logs at ws://127.0.0.1:${options.devicePort}`,
   );

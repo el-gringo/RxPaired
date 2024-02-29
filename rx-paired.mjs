@@ -86,7 +86,7 @@ export default function startRxPaired({
 } = {}) {
   const noPassword = typeof password !== "string" || password.length === 0;
   const serverOpts = {
-    inspectorPort: inspectorPort ?? DEFAULT_INSPECTOR_PORT,
+    inspectorPort: noInspector ? -1 : (inspectorPort ?? DEFAULT_INSPECTOR_PORT),
     devicePort: devicePort ?? DEFAULT_DEVICE_PORT,
     shouldCreateLogFiles: true,
     password: noPassword ? null : password,

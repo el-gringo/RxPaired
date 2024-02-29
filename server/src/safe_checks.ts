@@ -15,7 +15,7 @@ export default function createCheckers(
     deviceConnectionLimit,
   }: {
     deviceSocket: WebSocketServer;
-    htmlInspectorSocket: WebSocketServer;
+    htmlInspectorSocket: WebSocketServer | null;
     maxTokenDuration: number;
     inspectorMessageLimit: number;
     deviceMessageLimit: number;
@@ -115,7 +115,7 @@ export default function createCheckers(
             "closing everything",
           inspectorMessageInCurrent24Hours,
         );
-        htmlInspectorSocket.close();
+        htmlInspectorSocket?.close();
         deviceSocket.close();
         process.exit(1);
       }
@@ -130,7 +130,7 @@ export default function createCheckers(
             "closing everything",
           deviceMessageInCurrent24Hours,
         );
-        htmlInspectorSocket.close();
+        htmlInspectorSocket?.close();
         deviceSocket.close();
         process.exit(1);
       }
@@ -145,7 +145,7 @@ export default function createCheckers(
         logger.warn(
           "Maximum number of bad passwords reached, closing everything",
         );
-        htmlInspectorSocket.close();
+        htmlInspectorSocket?.close();
         deviceSocket.close();
         process.exit(1);
       }
@@ -157,7 +157,7 @@ export default function createCheckers(
         logger.warn(
           "Maximum number of new inspectors reached, closing everything",
         );
-        htmlInspectorSocket.close();
+        htmlInspectorSocket?.close();
         deviceSocket.close();
         process.exit(1);
       }
@@ -172,7 +172,7 @@ export default function createCheckers(
         logger.warn(
           "Maximum number of new devices reached, closing everything",
         );
-        htmlInspectorSocket.close();
+        htmlInspectorSocket?.close();
         deviceSocket.close();
         process.exit(1);
       }
