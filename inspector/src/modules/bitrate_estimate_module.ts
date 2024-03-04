@@ -96,6 +96,16 @@ function createBitrateEstimateChart(
   canvasElt.style.display = "absolute";
   const canvasCtx = canvasElt.getContext("2d");
   const measurePointEventListener: Array<(e: MouseEvent) => void> = [];
+  const canvasOverlay = strHtml`<div>${canvasElt}</div>`;
+  canvasOverlay.style.position = "relative";
+  canvasOverlay.style.width = `${DEFAULT_CANVAS_WIDTH}px`;
+  canvasOverlay.style.height = `${DEFAULT_CANVAS_HEIGHT}px`;
+  canvasOverlay.style.maxWidth = "100%";
+  const canvasParent = strHtml`<div>${canvasOverlay}</div>`;
+  canvasParent.style.display = "flex";
+  canvasParent.style.justifyContent = "center";
+  canvasParent.style.overflow = "hidden";
+  canvasParent.style.aspectRatio = `${CANVAS_ASPECT_RATIO}`;
 
   reRender();
   state.subscribe(STATE_PROPS.BITRATE_ESTIMATE, reRender);
@@ -104,15 +114,6 @@ function createBitrateEstimateChart(
   const resizeObserver = new ResizeObserver(onBodyResize);
   resizeObserver.observe(parentResizableElement);
   let lastClientHeight: number | undefined;
-
-  const canvasOverlay = strHtml`<div>${canvasElt}</div>`;
-  canvasOverlay.style.position = "relative";
-  canvasOverlay.style.width = `${DEFAULT_CANVAS_WIDTH}px`;
-  canvasOverlay.style.height = `${DEFAULT_CANVAS_HEIGHT}px`;
-  const canvasParent = strHtml`<div>${canvasOverlay}</div>`;
-  canvasParent.style.textAlign = "center";
-  canvasParent.style.overflow = "hidden";
-  canvasParent.style.aspectRatio = `${CANVAS_ASPECT_RATIO}`;
 
   return [
     canvasParent,
