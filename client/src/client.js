@@ -1,3 +1,4 @@
+/*! ~~~ This script should be included through a `<script>` tag before all other `<script>` tags in your HTML page. ~~~ */
 /*!
  * +-------------------------------------------------------------------------+
  * | Only if you copy-pasted that script, you may set the `__FORCED_TOKEN__` |
@@ -30,6 +31,9 @@ function init(currentScriptSrc, playerClass) {
     } else {
       wsUrl = __FORCED_SERVER_URL__;
     }
+  }
+  if (wsUrl.length > 0 && wsUrl[wsUrl.length - 1] === "/") {
+    wsUrl = wsUrl.substring(0, wsUrl.length - 1);
   }
 
   let token = __FORCED_TOKEN__;

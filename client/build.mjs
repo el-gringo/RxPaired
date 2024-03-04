@@ -102,6 +102,7 @@ export default function buildClient(options) {
   const esbuildOpts = {
     entryPoints: [path.join(currentDirName, "src", "client.js")],
     bundle: true,
+    format: "esm",
     minifySyntax: minify,
     minifyWhitespace: minify,
     target: "es6",
