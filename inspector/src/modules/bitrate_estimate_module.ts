@@ -106,6 +106,7 @@ function createBitrateEstimateChart(
   canvasParent.style.justifyContent = "center";
   canvasParent.style.overflow = "hidden";
   canvasParent.style.aspectRatio = `${CANVAS_ASPECT_RATIO}`;
+  const tooltipElements: HTMLElement[] = [];
 
   reRender();
   state.subscribe(STATE_PROPS.BITRATE_ESTIMATE, reRender);
@@ -118,7 +119,7 @@ function createBitrateEstimateChart(
   return [
     canvasParent,
     () => {
-      removeEventListeners();
+      cleanTooltips();
       state.unsubscribe(STATE_PROPS.BITRATE_ESTIMATE, reRender);
       configState.unsubscribe(STATE_PROPS.CSS_MODE, reRender);
       resizeObserver.unobserve(parentResizableElement);
@@ -126,7 +127,7 @@ function createBitrateEstimateChart(
   ];
 
   function reRender(): void {
-    removeEventListeners();
+    cleanTooltips();
     const bitrateEstimates = state.getCurrentState(
       STATE_PROPS.BITRATE_ESTIMATE,
     );
@@ -149,9 +150,17 @@ function createBitrateEstimateChart(
     }
   }
 
-  function removeEventListeners(): void {
+  function cleanTooltips(): void {
     for (const eventListener of measurePointEventListener) {
       canvasElt.removeEventListener("mousemove", eventListener);
+    }
+    while (tooltipElements.length > 0) {
+      const tooltip = tooltipElements.pop();
+      // typescript check, it should never occur.
+      if (tooltip === undefined) {
+        break;
+      }
+      canvasOverlay.removeChild(tooltip);
     }
   }
 
@@ -304,6 +313,7 @@ function createBitrateEstimateChart(
             tooltip.style.visibility = "hidden";
           }
         };
+        tooltipElements.push(tooltip);
         canvasElt.addEventListener("mousemove", eventHander);
         measurePointEventListener.push(eventHander);
       }
