@@ -179,10 +179,10 @@ export function convertToReadableBitUnit(value: number): string {
 
   let i = 0;
   let val = value;
-  while (val >= 1024 && i < units.length - 1) {
-    val /= 1024;
+  while (val >= 1000 && i < units.length - 1) {
+    val /= 1000;
     i++;
   }
 
-  return `${val.toFixed(1)} ${units[i]}`;
+  return `${val.toFixed(2)} ${units[i]}`;
 }

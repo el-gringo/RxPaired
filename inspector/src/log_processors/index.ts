@@ -28,7 +28,7 @@ const REGEX_CANCELLED_REQUEST =
 const REGEX_MANIFEST_PARSING_TIME =
   /^(\d+\.\d+) \[\w+\] \w+: Manifest parsed in (\d+(?:\.\d+)?)ms/;
 const REGEX_BITRATE_ESTIMATE =
-  /^(\d+\.\d+) \[\w+\] \w+: new \w+ bitrate estimate (\d+\.?\d+)/;
+  /^(\d+\.\d+) \[\w+\] \w+: new video bitrate estimate (\d+\.?\d+)/;
 
 /**
  * Each of the following objects is linked to a type of log.
