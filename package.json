@@ -10,7 +10,7 @@
   "scripts": {
     "fmt": "prettier --write .",
     "fmt:check": "prettier . --check",
-    "prepublish": "cd server && npm run build",
+    "prepublishOnly": "cd server && npm run build",
     "start": "cd server && npm run build && cd .. && node rx-paired.mjs",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
