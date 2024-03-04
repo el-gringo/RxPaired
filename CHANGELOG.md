@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Other improvements
+
+-   Remove unnecessary IIFE from client script
+
 ## v0.1.10 (2024-02-29)
 
 ### Other improvements
