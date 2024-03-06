@@ -12,7 +12,8 @@
     "fmt:check": "prettier . --check",
     "prepublishOnly": "cd server && npm run build",
     "start": "cd server && npm run build && cd .. && node rx-paired.mjs",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "echo \"No build in root\" "
   },
   "repository": {
     "type": "git",
@@ -35,6 +36,8 @@
     "typescript": "^5.3.3"
   },
   "workspaces": [
-    "inspector"
+    "inspector",
+    "client",
+    "server"
   ]
 }

@@ -15,3 +15,4 @@
 /server/logs-*.txt
 /server/build
 /server/.persistent-tokens.json
+.npmrc
