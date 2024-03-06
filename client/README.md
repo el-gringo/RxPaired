@@ -14,16 +14,18 @@ result.
 To build it, you first need to install its dependencies.
 
 To do that, make sure that you have `npm` installed and this repository cloned.
-Then go to this directory on a terminal, and type:
+Then in the root directory, open a terminal and type:
 
 ```sh
+# in ./RxPaired
 npm install
 ```
 
-You then have to create a `.npmrc` file in this directory.
+You have to create a `.npmrc` file in the root directory.
 You can base yourself on the `.npmrc.sample` file:
 
 ```sh
+# in ./RxPaired
 cp .npmrc.sample .npmrc
 ```
 
@@ -35,7 +37,7 @@ This will be the WebSocket address `RxPaired-server` is listening to for
 `RxPaired-client` connections and messages.
 
 If you didn't start the `RxPaired-Server` yet, you should first start doing this by
-going to the `../server` directory.
+using `npm run serve --workspace=server`.
 
 Note that the URL already present uses the default port used by the server. If your
 server runs locally in the default config, you might not actually have to update it.
@@ -51,7 +53,13 @@ Once this is done, you can start building the `RxPaired-client`.
 In your terminal, type:
 
 ```sh
+# From folder ./RxPaired/client
 npm run build:min
+```
+OR
+```sh
+# From folder ./RxPaired
+npm run build:min --workspace="client"
 ```
 
 The script should now be built at `./client.js`. Note that it relies on ES6, if
