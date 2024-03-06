@@ -173,14 +173,14 @@ For example if your HTML page looks like this:
 
 ```html
 <html>
-    <head>
-        <title>My Page</title>
-        <script src="./my-bundle.js"></script>
-        <script src="./other-dependency.js"></script>
-    </head>
-    <body>
-        <!-- ... -->
-    </body>
+  <head>
+    <title>My Page</title>
+    <script src="./my-bundle.js"></script>
+    <script src="./other-dependency.js"></script>
+  </head>
+  <body>
+    <!-- ... -->
+  </body>
 </html>
 ```
 
@@ -189,15 +189,15 @@ And if your client script can be accessed through the url
 
 ```html
 <html>
-    <head>
-        <title>My Page</title>
-        <script src="http://127.0.0.1/my-script-url"></script>
-        <script src="./my-bundle.js"></script>
-        <script src="./other-dependency.js"></script>
-    </head>
-    <body>
-        <!-- ... -->
-    </body>
+  <head>
+    <title>My Page</title>
+    <script src="http://127.0.0.1/my-script-url"></script>
+    <script src="./my-bundle.js"></script>
+    <script src="./other-dependency.js"></script>
+  </head>
+  <body>
+    <!-- ... -->
+  </body>
 </html>
 ```
 
@@ -208,17 +208,17 @@ script's content at the same place:
 
 ```html
 <html>
-    <head>
-        <title>My Page</title>
-        <script>
-            // THE CLIENT SCRIPT'S CODE GOES HERE
-        </script>
-        <script src="./my-bundle.js"></script>
-        <script src="./other-dependency.js"></script>
-    </head>
-    <body>
-        <!-- ... -->
-    </body>
+  <head>
+    <title>My Page</title>
+    <script>
+      // THE CLIENT SCRIPT'S CODE GOES HERE
+    </script>
+    <script src="./my-bundle.js"></script>
+    <script src="./other-dependency.js"></script>
+  </head>
+  <body>
+    <!-- ... -->
+  </body>
 </html>
 ```
 

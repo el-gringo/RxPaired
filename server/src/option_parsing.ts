@@ -39,7 +39,7 @@ const optionsDescription = [
     description:
       "Port used for inspector-to-server communication.\n" +
       "To set to `-1` to disable (in which case you may want " +
-      "to rely on \"no-token\" mode).\n" +
+      'to rely on "no-token" mode).\n' +
       `Defaults to ${DEFAULT_INSPECTOR_PORT}.`,
     outputVar: "inspectorPort",
   },

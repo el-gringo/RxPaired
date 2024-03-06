@@ -1,8 +1,0 @@
-{
-    "eslint.workingDirectories": [
-        "inspector",
-        "server",
-        "client",
-        "./"
-    ]
-}

@@ -56,7 +56,9 @@ In your terminal, type:
 # From folder ./RxPaired/client
 npm run build:min
 ```
+
 OR
+
 ```sh
 # From folder ./RxPaired
 npm run build:min --workspace="client"
