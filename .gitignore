@@ -1,12 +1,10 @@
 /node_modules/
 /inspector/node_modules/
 /inspector/inspector.js
-/inspector/.npmrc
 
 /client/node_modules/
 /client/client.js
 /client/client.es5.js
-/client/.npmrc
 
 /server/node_modules/
 /server/RxPaired-server.bundle.mjs
@@ -15,4 +13,4 @@
 /server/logs-*.txt
 /server/build
 /server/.persistent-tokens.json
-.npmrc
+*.npmrc
