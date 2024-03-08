@@ -1,3 +1,5 @@
+# RxPaired-client
+
 ## How to build RxPaired-client and what to do with it
 
 To build it, you first need to install its dependencies.
@@ -9,7 +11,7 @@ Then in the root directory, open a terminal and type:
 npm install
 ```
 
-You have to create a `.npmrc` file in the root directory.
+If not already done, you have to create a `.npmrc` file in the root directory.
 You can base yourself on the `.npmrc.sample` file:
 
 ```sh
@@ -53,7 +55,7 @@ At last, you have two choices in how to deploy that script:
 
 - Either you store it on an HTTP(S) server, in which case you'll have to
   indicate its URI to the `RxPaired-inspector` (more information on that
-  in its directory: `./inspector`).
+  in `INSPECTOR.md`).
 
   This is the recommended choice.
   If you choose to go this way, the `RxPaired-inspector` will conveniently
