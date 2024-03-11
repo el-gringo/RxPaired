@@ -135,7 +135,8 @@ npx rx-paired --no-inspector
 
 This will just start a server listening for logs and make the client script
 (usage described below) directly accessible, either through an URL or by
-copy-pasting the file.
+copy-pasting the file (when copy-pasting, don't pay attention to its
+`FORCED_TOKEN` variable, this is only needed when running with an inspector).
 
 ### Step 1 (alternate): Running the full package, with a remote inspector
 
@@ -154,8 +155,8 @@ You can then load RxPaired's inspector pages by going to the outputed URL
 ([https://127.0.0.1:8695](https://127.0.0.1:8695) by default).
 You will have instructions allowing to generate a debugging "token" (multiple
 tokens can also be created to allow inspection of multiple devices
-simultaneously) and then to obtain the client script (more details on how to use
-it below).
+simultaneously) and then, once you navigated to that token's page, ways to
+obtain the client script (more details on how to use it below).
 
 ### Step 2: Linking the client script to your application
 
@@ -236,7 +237,7 @@ HTTP connections will here most likely be blocked.
 
 RxPaired exposes at most three HTTP ports:
 
-1. a port to communicat with inspectors (unless you ran in `--no-inspector`
+1. a port to communicate with inspectors (unless you ran in `--no-inspector`
    mode)
 2. an HTTP port to serve both the inspector pages and client script.
 3. a port listening for logs sent by your application
