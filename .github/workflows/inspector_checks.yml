@@ -12,9 +12,6 @@ on:
 jobs:
   typechecking_and_linting:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: inspector
 
     strategy:
       matrix:
@@ -28,8 +25,8 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: "npm"
-          cache-dependency-path: inspector/package-lock.json
+          cache-dependency-path: package-lock.json
 
-      - run: npm install
-      - run: npm run check
-      - run: npm run lint
+      - run: npm ci
+      - run: npm run check --workspace=inspector
+      - run: npm run lint --workspace=inspector

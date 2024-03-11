@@ -7,8 +7,8 @@
   "scripts": {
     "build": "tsc --project .",
     "build:all": "npm run build && rollup -c rollup.config.mjs",
-    "run": "node ./build/main.js",
-    "start": "npm run build && npm run run",
+    "serve": "node ./build/main.js",
+    "start": "npm run build && npm run serve",
     "check": "tsc --noEmit --project .",
     "lint": "eslint src -c .eslintrc.cjs"
   },

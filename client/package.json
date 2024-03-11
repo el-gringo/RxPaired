@@ -8,7 +8,8 @@
     "build:min": "./build.mjs -m && tsc client.js --target ES5 --allowJs --outFile client.es5.js",
     "build:watch": "./build.mjs -w",
     "build:watch:min": "./build.mjs -w -m",
-    "serve": "node ../utils/static_http_server.mjs --port 8696 --include-client-file"
+    "serve": "node ../utils/static_http_server.mjs --port 8696 --include-client-file",
+    "lint": "echo \"No script lint for this package\""
   },
   "author": "peaberberian",
   "license": "MIT"

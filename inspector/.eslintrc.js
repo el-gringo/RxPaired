@@ -163,6 +163,9 @@ module.exports = {
       "error",
       {
         devDependencies: false,
+        // will try to find dependencies in the parent directory as well as in this package
+        // see https://github.com/import-js/eslint-plugin-import/issues/1174
+        packageDir: [".", ".."],
       },
     ],
     "import/no-internal-modules": "off",

@@ -44,10 +44,12 @@ export default async function RxPairedServer(options: ParsedOptions) {
   }
 
   const deviceSocket = new WebSocketServer({ port: options.devicePort });
-  const htmlInspectorSocket = options.inspectorPort < 0 ?
-    null : new WebSocketServer({
-    port: options.inspectorPort,
-  });
+  const htmlInspectorSocket =
+    options.inspectorPort < 0
+      ? null
+      : new WebSocketServer({
+          port: options.inspectorPort,
+        });
 
   const checkers = createCheckers(activeTokensList, {
     deviceSocket,
@@ -273,7 +275,8 @@ export default async function RxPairedServer(options: ParsedOptions) {
       if (receivedPassword !== (options.password ?? "")) {
         writeLog(
           "warn",
-          "Received inspector request with invalid password: " + receivedPassword,
+          "Received inspector request with invalid password: " +
+            receivedPassword,
           { address: req.socket.remoteAddress },
         );
         ws.close();
@@ -471,7 +474,9 @@ export default async function RxPairedServer(options: ParsedOptions) {
         ) {
           const indexOfToken = activeTokensList.findIndex(tokenId);
           if (indexOfToken === -1) {
-            writeLog("warn", "Closing inspector's token not found.", { tokenId });
+            writeLog("warn", "Closing inspector's token not found.", {
+              tokenId,
+            });
             return;
           }
           writeLog("log", "Removing token.", {
