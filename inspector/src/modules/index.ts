@@ -1,5 +1,6 @@
 import { ConfigState, InspectorState, LogViewState } from "../constants";
 import ObservableState from "../observable_state";
+import BitrateEstimateModule from "./bitrate_estimate_module";
 import generateAudioVideoBufferContentModule from "./buffer_audio_video_content_module";
 import BufferContentModule from "./buffer_content_module";
 import BufferSizeModule from "./buffer_size_module";
@@ -46,6 +47,14 @@ const ALL_MODULES: ModuleInformation[] = [
     moduleTitle: "Buffer gap evolution chart",
     moduleId: "buffer-size",
     moduleFn: BufferSizeModule,
+    isClosable: true,
+    isHalfWidthByDefault: true,
+    contexts: ["live-debugging", "post-debugger"],
+  },
+  {
+    moduleTitle: "Bitrate estimate evolution chart",
+    moduleId: "bitrate-estimate",
+    moduleFn: BitrateEstimateModule,
     isClosable: true,
     isHalfWidthByDefault: true,
     contexts: ["live-debugging", "post-debugger"],

@@ -10,6 +10,7 @@ import createModules from "../create_modules";
 import ObservableState, { UPDATE_TYPE } from "../observable_state";
 import { updateStatesFromLogGroup } from "../update_state_from_log";
 import { generatePageUrl } from "../utils";
+import { clearInspectorState } from "./live_debugging";
 import {
   createClearStoredConfigButton,
   createDarkLightModeButton,
@@ -119,6 +120,7 @@ function createImportFileButton(
       if (typeof loadTarget.result !== "string") {
         return;
       }
+      clearInspectorState(inspectorState, logViewState);
       const dataStr = loadTarget.result;
       const logs: Array<[string, number]> = [];
       let dateAtPageLoad;
@@ -210,7 +212,7 @@ function createPostDebuggerHeaderElement(
         " > Post-Debugger",
       ]}</span>
     </div>
-    <div class="header-item">${[
+    <div class="header-item page-controls">${[
       createTimeRepresentationSwitch(configState),
       createClearStoredConfigButton(configState),
       createDarkLightModeButton(configState),

@@ -27,6 +27,8 @@ const REGEX_CANCELLED_REQUEST =
   /^(\d+\.\d+) \[\w+\] \w+: Segment request cancelled (\w+) P: ([^ ]+) A: ([^ ]+) R: ([^ ]+) S: (?:(?:(\d+(?:.\d+)?)-(\d+(?:.\d+)?))|(?:init))/;
 const REGEX_MANIFEST_PARSING_TIME =
   /^(\d+\.\d+) \[\w+\] \w+: Manifest parsed in (\d+(?:\.\d+)?)ms/;
+const REGEX_BITRATE_ESTIMATE =
+  /^(\d+\.\d+) \[\w+\] \w+: new video bitrate estimate (\d+\.?\d+)/;
 
 /**
  * Each of the following objects is linked to a type of log.
@@ -90,6 +92,12 @@ const LogProcessors: Array<LogProcessor<keyof InspectorState>> = [
     ],
   },
 
+  {
+    filter: (log: string): boolean => log.indexOf("bitrate estimate") > -1,
+    processor: (log: string): Array<StateUpdate<keyof InspectorState>> =>
+      processBitrateEstimateLog(log),
+    updatedProps: [STATE_PROPS.BITRATE_ESTIMATE],
+  },
   {
     filter: (log: string): boolean =>
       log.indexOf("playerStateChange event") > -1,
@@ -315,6 +323,7 @@ function processPlayerStateChangeLog(
   StateUpdate<
     | STATE_PROPS.POSITION
     | STATE_PROPS.BUFFER_GAPS
+    | STATE_PROPS.BITRATE_ESTIMATE
     | STATE_PROPS.BUFFERED_RANGES
     | STATE_PROPS.CONTENT_DURATION
     | STATE_PROPS.VIDEO_INVENTORY
@@ -331,6 +340,7 @@ function processPlayerStateChangeLog(
     StateUpdate<
       | STATE_PROPS.POSITION
       | STATE_PROPS.BUFFER_GAPS
+      | STATE_PROPS.BITRATE_ESTIMATE
       | STATE_PROPS.BUFFERED_RANGES
       | STATE_PROPS.CONTENT_DURATION
       | STATE_PROPS.VIDEO_INVENTORY
@@ -693,6 +703,41 @@ function processManifestParsingTimeLog(
         {
           timeMs,
           timestamp,
+        },
+      ],
+    },
+  ];
+}
+
+/**
+ * @param {string} logTxt
+ * @returns {Array.<Object>}
+ */
+function processBitrateEstimateLog(
+  logTxt: string,
+): Array<StateUpdate<STATE_PROPS.BITRATE_ESTIMATE>> {
+  const match = logTxt.match(REGEX_BITRATE_ESTIMATE);
+  if (match === null) {
+    console.error("no match");
+    console.error("Unrecognized bitrate estimate log format. Has it changed?");
+    return [];
+  }
+  const timestamp = +match[1];
+  const bitrateEstimate = +match[2];
+  if (isNaN(timestamp) || isNaN(bitrateEstimate)) {
+    console.error("something wrong", timestamp, bitrateEstimate);
+
+    console.error("Unrecognized bitrate estimate log format. Has it changed?");
+    return [];
+  }
+  return [
+    {
+      property: STATE_PROPS.BITRATE_ESTIMATE,
+      updateType: UPDATE_TYPE.PUSH,
+      updateValue: [
+        {
+          timestamp,
+          bitrateEstimate,
         },
       ],
     },

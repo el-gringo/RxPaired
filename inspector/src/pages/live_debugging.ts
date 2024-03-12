@@ -321,7 +321,7 @@ function createLiveDebuggerHeaderElement(
         strHtml`<span class="token-title-val">${tokenId}</span>`,
       ]}</span>
     </div>
-    <div class="header-item">${[
+    <div class="header-item page-controls">${[
       createTimeRepresentationSwitch(configState),
       createExportLogsButton(logViewState),
       createCloseConnectionButton(currentSocket),
@@ -384,7 +384,7 @@ function createClearAllButton(
 /**
  * @param {Object} inspectorState
  */
-function clearInspectorState(
+export function clearInspectorState(
   inspectorState: ObservableState<InspectorState>,
   logViewState: ObservableState<LogViewState>,
 ): void {

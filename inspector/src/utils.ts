@@ -168,3 +168,21 @@ export function convertDateToLocalISOString(date: Date): string {
   ISOstring += String(date.getMilliseconds()).padStart(3, "0");
   return ISOstring;
 }
+/**
+ * Converts a number to a human-readable string representation with appropriate bit unit.
+ * @example 12500000 => 12.5mb
+ * @param value The number to convert.
+ * @returns A string representing the human-readable bit unit of the number.
+ */
+export function convertToReadableBitUnit(value: number): string {
+  const units = ["b", "kb", "mb", "gb", "tb"];
+
+  let i = 0;
+  let val = value;
+  while (val >= 1000 && i < units.length - 1) {
+    val /= 1000;
+    i++;
+  }
+
+  return `${val.toFixed(2)} ${units[i]}`;
+}

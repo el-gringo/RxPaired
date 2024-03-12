@@ -59,6 +59,15 @@ export enum STATE_PROPS {
    */
   BUFFER_GAPS = "bufferGaps",
   /**
+   * History of "bitrate estimate" measures.
+   * This is an array of object with two properties:
+   *   - `timestamp` (number): monotically raising time value representing the
+   *     time at which the measure was taken, in milliseconds.
+   *   - `bitrateEstimate` (number|undefined): Estimated bitrate at the time of the
+   *     measure.
+   */
+  BITRATE_ESTIMATE = "bitrateEstimate",
+  /**
    * Current playback position, in seconds.
    */
   POSITION = "position",
@@ -125,6 +134,10 @@ export type TimeRepresentation = "date" | "timestamp";
 export interface InspectorState {
   [STATE_PROPS.BUFFER_GAPS]?: Array<{
     bufferGap: number | undefined;
+    timestamp: number;
+  }>;
+  [STATE_PROPS.BITRATE_ESTIMATE]?: Array<{
+    bitrateEstimate: number | undefined;
     timestamp: number;
   }>;
   [STATE_PROPS.POSITION]?: number;
