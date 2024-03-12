@@ -212,7 +212,7 @@ function createPostDebuggerHeaderElement(
         " > Post-Debugger",
       ]}</span>
     </div>
-    <div class="header-item">${[
+    <div class="header-item page-controls">${[
       createTimeRepresentationSwitch(configState),
       createClearStoredConfigButton(configState),
       createDarkLightModeButton(configState),
