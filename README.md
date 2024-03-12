@@ -135,8 +135,10 @@ npx rx-paired --no-inspector
 
 This will just start a server listening for logs and make the client script
 (usage described below) directly accessible, either through an URL or by
-copy-pasting the file (when copy-pasting, don't pay attention to its
-`FORCED_TOKEN` variable, this is only needed when running with an inspector).
+copy-pasting the file.
+
+_Note: when copy-pasting, don't pay attention to the `FORCED_TOKEN` variable
+found inside this script, this is only needed when running with an inspector._
 
 ### Step 1 (alternate): Running the full package, with a remote inspector
 
@@ -160,7 +162,7 @@ obtain the client script (more details on how to use it below).
 
 ### Step 2: Linking the client script to your application
 
-In step 1, you should either have obtained an URL, a file, or both to a "client
+In step 1, you should either have obtained an URL, a file, or both, to a "client
 script". It will now need to be added to your application so it can send logs.
 
 This client script monkey-patches some logging and networking logic to redirect
@@ -202,10 +204,8 @@ And if your client script can be accessed through the url
 </html>
 ```
 
-If you want to rely on the client script file instead, first make sure you
-followed the corresponding instructions if you went through the inspector (this
-does not apply if you are in `--no-inspector` mode) and then copy and paste the
-script's content at the same place:
+If you would prefer to rely on the client script file instead, you can copy and
+paste it at the same location:
 
 ```html
 <html>
@@ -222,6 +222,10 @@ script's content at the same place:
   </body>
 </html>
 ```
+
+_NOTE: Only when running RxPaired with an inspector and copy-pasting the file,
+you'll need to include your token in the file's content manually. You can follow
+the instructions in the corresponding inspector page for more information._
 
 Once any of those solutions is implemented, you can launch your application.
 A log file should now be created locally containing logs from it, and, if
@@ -267,19 +271,16 @@ The client script can then be copy-pasted in your application's page as
 described in step 2 (if you're relying on an inspector, don't forget to also
 update `__FORCED_TOKEN__`).
 
-### NOTE: For more advanced usages
+## RxPaired on a server
 
 If you plan to make RxPaired more globally accessible through a Web Server,
-building independently its three modules is more configurable:
+building and running independently its three modules is more configurable:
 
-1. start RxPaired-server in `./server` with the wanted options
-2. build and optionally serve the RxPaired-client script that will be put on the device
-   (instructions and files in `./client`)
-3. build and serve the RxPaired-inspector web page (instructions and files in
-   `./inspector`).
-
-You can look at how to do just that by looking at the `README.md` file of each
-of those subdirectories.
+1. start RxPaired-server: see [./SERVER.md](./SERVER.md)
+2. build and optionally serve the RxPaired-client script that will be put on the
+   device: see [./CLIENT.md](./CLIENT.md)
+3. build and serve the RxPaired-inspector web page: see
+   [./INSPECTOR.md](./INSPECTOR.md).
 
 For now, this will require you to first either clone the repository or to go to
 the directory `npm` installed RxPaired in. We're also thinking of easier
