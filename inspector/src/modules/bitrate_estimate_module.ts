@@ -305,6 +305,12 @@ function createBitrateEstimateChart(
         // center the tooltip and display it just a bit higher than the point
         tooltip.style.top = `${y - 30}px`;
         tooltip.style.left = `${x - 20}px`;
+        tooltip.style.padding = "2px";
+        tooltip.style.backgroundColor =
+          configState.getCurrentState(STATE_PROPS.CSS_MODE) === "dark"
+            ? "#000"
+            : "#fff";
+
         canvasOverlay.appendChild(tooltip);
         const eventHander = (e: MouseEvent) => {
           if (canvasCtx.isPointInPath(circle, e.offsetX, e.offsetY)) {
