@@ -1,10 +1,16 @@
 # Changelog
 
-## Unreleased
+## v0.1.11 (2024-03-12)
+
+### Features
+
+- Add video bitrate chart [#15]
 
 ### Other improvements
 
 - Remove unnecessary IIFE from client script
+- Move RxPaired subcomponents building instructions to the top directory [#18]
+- Rely on npm worskpaces [#18]
 
 ## v0.1.10 (2024-02-29)
 
