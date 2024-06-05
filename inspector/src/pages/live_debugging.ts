@@ -191,9 +191,9 @@ export default function generateLiveDebuggingPage(
         const signal = JSON.parse(event.data);
 
         if (isInitLog(event.data)) {
-          const { dateAtPageLoad } = parseAndGenerateInitLog(event.data);
+          const { dateAtPageLoad, log } = parseAndGenerateInitLog(event.data);
           clearInspectorState(inspectorState, logViewState);
-          let updates: Array<[string, number]> = [[event.data, nextLogId++]];
+          let updates: Array<[string, number]> = [[log, nextLogId++]];
           if (signal.value?.history?.length > 0) {
             updates = updates.concat(
               (signal.value.history as string[]).map((str) => [
