@@ -217,8 +217,8 @@ function init(currentScriptSrc, playerClass) {
     typeof window !== "object"
       ? null
       : typeof window.TextDecoder !== "function"
-      ? null
-      : window.TextDecoder;
+        ? null
+        : window.TextDecoder;
   const escape = window.escape;
 
   /**
