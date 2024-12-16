@@ -1,17 +1,17 @@
-import { appendFile } from "fs";
-import { IncomingMessage } from "http";
-import process from "process";
-import { fileURLToPath } from "url";
+import { appendFile } from "node:fs";
+import { IncomingMessage } from "node:http";
+import process from "node:process";
+import { fileURLToPath } from "node:url";
 import WebSocket, { WebSocketServer } from "ws";
 import ActiveTokensList, {
   TokenMetadata,
   TokenType,
-} from "./active_tokens_list.js";
-import logger from "./logger.js";
-import parseOptions, { ParsedOptions } from "./option_parsing.js";
-import PersistentTokensStorage from "./persistent_tokens_storage.js";
-import createCheckers from "./safe_checks.js";
-import { generatePassword } from "./utils.js";
+} from "./active_tokens_list.ts";
+import logger from "./logger.ts";
+import parseOptions, { ParsedOptions } from "./option_parsing.ts";
+import PersistentTokensStorage from "./persistent_tokens_storage.ts";
+import createCheckers from "./safe_checks.ts";
+import { generatePassword } from "./utils.ts";
 
 /**
  * Regular expression to extract timestamp and date from the initial "Init" log
@@ -23,6 +23,7 @@ const INIT_REGEX = /^Init v1 ([0-9]+(?:\.[0-9]+)?) ([0-9]+(?:\.[0-9]+)?)$/;
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const options = parseOptions(process.argv.slice(2));
+
   RxPairedServer(options).catch((err) => {
     console.error("Error while initializing RxPairedServer", err);
   });
@@ -43,13 +44,11 @@ export default async function RxPairedServer(options: ParsedOptions) {
     activeTokensList = new ActiveTokensList([]);
   }
 
-  const deviceSocket = new WebSocketServer({ port: options.devicePort });
+  const deviceSocket = new WebSocketServer({ noServer: true });
   const htmlInspectorSocket =
     options.inspectorPort < 0
       ? null
-      : new WebSocketServer({
-          port: options.inspectorPort,
-        });
+      : new WebSocketServer({ noServer: true });
 
   const checkers = createCheckers(activeTokensList, {
     deviceSocket,
@@ -68,7 +67,7 @@ export default async function RxPairedServer(options: ParsedOptions) {
       return;
     }
 
-    let tokenId = req.url.substring(1);
+    let tokenId = req.url.replace(/^\/device\//, '');
     let logFileNameSuffix = tokenId;
     let existingToken: TokenMetadata;
     let existingTokenIndex: number;
@@ -270,7 +269,8 @@ export default async function RxPairedServer(options: ParsedOptions) {
         ws.close();
         return;
       }
-      const urlParts = parseInspectorUrl(req.url, options.password);
+      const url = req.url.replace(/^\/inspector/, '');
+      const urlParts = parseInspectorUrl(url, options.password);
       const receivedPassword = urlParts.password ?? "";
       if (receivedPassword !== (options.password ?? "")) {
         writeLog(
@@ -487,13 +487,11 @@ export default async function RxPairedServer(options: ParsedOptions) {
         }
       });
     });
-    logger.log(
-      `Emitting to web inspectors at ws://127.0.0.1:${options.inspectorPort}`,
-    );
   }
-  logger.log(
-    `Listening for device logs at ws://127.0.0.1:${options.devicePort}`,
-  );
+  return {
+    htmlInspectorSocket,
+    deviceSocket
+  };
 }
 
 function sendMessageToInspector(

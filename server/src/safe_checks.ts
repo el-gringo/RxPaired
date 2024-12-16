@@ -1,7 +1,7 @@
-import { performance } from "perf_hooks";
+import { performance } from "node:perf_hooks";
 import { WebSocketServer } from "ws";
-import ActiveTokensList from "./active_tokens_list.js";
-import logger from "./logger.js";
+import ActiveTokensList from "./active_tokens_list.ts";
+import logger from "./logger.ts";
 
 export default function createCheckers(
   activeTokensList: ActiveTokensList,

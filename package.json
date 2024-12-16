@@ -3,15 +3,15 @@
   "version": "0.1.11",
   "description": " A very lightweight, RxPlayer-specialized, remote inspector ",
   "type": "module",
-  "main": "./rx-paired.mjs",
+  "main": "./rx-paired.ts",
   "bin": {
-    "rx-paired": "./rx-paired.mjs"
+    "rx-paired": "./rx-paired.ts"
   },
   "scripts": {
     "fmt": "prettier --write .",
     "fmt:check": "prettier . --check",
     "prepublishOnly": "cd server && npm run build",
-    "start": "cd server && npm run build && cd .. && node rx-paired.mjs",
+    "start": "bun rx-paired.ts",
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "npm run build --workspaces",
     "lint": "npm run lint --workspaces",

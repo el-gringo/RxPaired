@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 
-import path from "path";
-import { fileURLToPath } from "url";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import {
+  DEFAULT_STATIC_SERVER_PORT,
   DEFAULT_INSPECTOR_PORT,
   DEFAULT_DEVICE_PORT,
   DEFAULT_HISTORY_SIZE,
@@ -14,13 +15,10 @@ import {
   DEFAULT_DEVICE_MESSAGE_LIMIT,
   DEFAULT_INSPECTOR_MESSAGE_LIMIT,
   DEFAULT_LOG_FILE_PATH,
-} from "./server/build/constants.js";
-import RxPairedServer from "./server/build/main.js";
+} from "./server/src/constants.ts";
+import RxPairedServer from "./server/src/main.ts";
 import buildClient from "./client/build.mjs";
-import buildInspector from "./inspector/build.mjs";
 import startStaticHttpServer from "./utils/static_http_server.mjs";
-
-const DEFAULT_STATIC_SERVER_PORT = 8695;
 
 const currentDirName = getCurrentDirectoryName();
 
@@ -118,76 +116,72 @@ export default function startRxPaired({
   }
 
   console.log("Starting RxPaired...");
-  Promise.race([
-    RxPairedServer(serverOpts).catch((err) => {
-      console.error(
-        `\x1b[31m[${getHumanReadableHours()}]\x1b[0m Server build failed:`,
-        err,
-      );
-      process.exit(1);
-    }),
 
-    noInspector
-      ? Promise.resolve()
-      : buildInspector({
-          minify: true,
-          watch: false,
-          plugins: [],
-          deviceScriptUrl,
-          inspectorDebuggerUrl,
-          noPassword,
-        }).catch((err) => {
-          console.error(
-            `\x1b[31m[${getHumanReadableHours()}]\x1b[0m Inspector build failed:`,
-            err,
+  if (staticServerPort <= 0) {
+    return;
+  }
+
+  buildClient({
+    minify: true,
+    watch: false,
+    plugins: [],
+    deviceDebuggerUrl,
+    tokenValue,
+  }).then(() => {
+    startServer({ serverOpts, staticServerPort });
+  });
+}
+
+
+const servedFiles = {
+  "index.html": {
+    path: path.join(currentDirName, "inspector", "index.html"),
+    contentType: "text/html; charset=UTF-8",
+  },
+
+  // Yes, an empty string is actually a valid key!
+  "": {
+    path: path.join(currentDirName, "inspector", "index.html"),
+    contentType: "text/html; charset=UTF-8",
+  },
+
+  "inspector.js": {
+    path: path.join(currentDirName, "inspector", "inspector.js"),
+    contentType: "application/javascript; charset=UTF-8",
+  },
+
+  "client.js": {
+    path: path.join(currentDirName, "client", "client.js"),
+    contentType: "application/javascript; charset=UTF-8",
+  },
+};
+
+function startServer({ serverOpts, staticServerPort }) {
+  RxPairedServer(serverOpts)
+    .then(({ htmlInspectorSocket, deviceSocket }) => {
+      const server = startStaticHttpServer(servedFiles, staticServerPort, true);
+
+      server.on("upgrade", function upgrade(request, socket, head) {
+        const { pathname } = new URL(request.url, "http://127.0.0.1");
+
+        if (!noInspector && pathname.startsWith("/inspector/")) {
+          htmlInspectorSocket.handleUpgrade(
+            request,
+            socket,
+            head,
+            function done(ws) {
+              htmlInspectorSocket.emit("connection", ws, request);
+            },
           );
-          process.exit(1);
-        }),
+        } else if (pathname.startsWith("/device/")) {
+          deviceSocket.handleUpgrade(request, socket, head, function done(ws) {
+            deviceSocket.emit("connection", ws, request);
+          });
+        } else {
+          socket.destroy();
+        }
+      });
 
-    buildClient({
-      minify: true,
-      watch: false,
-      plugins: [],
-      deviceDebuggerUrl,
-      tokenValue,
-    }).catch((err) => {
-      console.error(
-        `\x1b[31m[${getHumanReadableHours()}]\x1b[0m Client build failed:`,
-        err,
-      );
-      process.exit(1);
-    }),
-  ])
-    .then(() => {
-      if (staticServerPort <= 0) {
-        return;
-      }
-      const servedFiles = {
-        "index.html": {
-          path: path.join(currentDirName, "inspector", "index.html"),
-          contentType: "text/html; charset=UTF-8",
-        },
-
-        // Yes, an empty string is actually a valid key!
-        "": {
-          path: path.join(currentDirName, "inspector", "index.html"),
-          contentType: "text/html; charset=UTF-8",
-        },
-
-        "inspector.js": {
-          path: path.join(currentDirName, "inspector", "inspector.js"),
-          contentType: "application/javascript; charset=UTF-8",
-        },
-
-        "client.js": {
-          path: path.join(currentDirName, "client", "client.js"),
-          contentType: "application/javascript; charset=UTF-8",
-        },
-      };
-
-      return startStaticHttpServer(servedFiles, staticServerPort, true);
-    })
-    .then(() => {
       console.log("");
       console.log("RxPaired started with success!");
       const clientPath = path.join(currentDirName, "client/client.js");
@@ -201,21 +195,14 @@ export default function startRxPaired({
             `To start the inspector, go to http://127.0.0.1:${staticServerPort}/`,
           );
         }
-      } else {
-        if (!noInspector) {
-          const inspectorPath = path.join(
-            currentDirName,
-            "inspector/index.html",
-          );
-          console.log(
-            `An inspector build has been generated in \`${inspectorPath}\` and a client script in \`${clientPath}\``,
-          );
-        } else {
-          console.log(
-            `A client script has been generated in \`${clientPath}\`, you can now run that script in your device.`,
-          );
-        }
       }
+    })
+    .catch((err) => {
+      console.error(
+        `\x1b[31m[${getHumanReadableHours()}]\x1b[0m Server build failed:`,
+        err,
+      );
+      process.exit(1);
     });
 }
 
@@ -243,15 +230,9 @@ Options:
                                  Ignore for no password.
 
   --http-port <port>             Port used to deliver the inspector HTTP page and the
-                                 device's script.
+                                 device's script and wesocket endpoints.
                                  Defaults to ${DEFAULT_STATIC_SERVER_PORT}.
                                  You may set it to "-1" to disable the static server.
-
-  --device-port <port>           Port used for device-to-server communication.
-                                 Defaults to ${DEFAULT_DEVICE_PORT}.
-
-  --inspector-port <port>        Port used for inspector-to-server communication.
-                                 Defaults to ${DEFAULT_INSPECTOR_PORT}.
 
   --no-inspector                 If this option is present, we won't build and serve the
                                  inspector page nor rely on it for "token" creation.
@@ -279,4 +260,22 @@ function checkIntArg(arg, val) {
     process.exit(1);
   }
   return toInt;
+}
+
+
+/**
+ * Returns the current time in a human-readable format.
+ * @returns {string}
+ */
+function getHumanReadableHours() {
+  const date = new Date();
+  return (
+    String(date.getHours()).padStart(2, "0") +
+    ":" +
+    String(date.getMinutes()).padStart(2, "0") +
+    ":" +
+    String(date.getSeconds()).padStart(2, "0") +
+    "." +
+    String(date.getMilliseconds()).padStart(4, "0")
+  );
 }

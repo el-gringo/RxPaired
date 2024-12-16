@@ -1,4 +1,4 @@
-import { appendFile } from "fs";
+import { appendFile } from "node:fs";
 
 export default new (class Logger {
   private _logFile: string | null;

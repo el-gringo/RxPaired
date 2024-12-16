@@ -10,11 +10,11 @@
  * scale this file is predicted to be used for, at least for now.
  */
 
-import http from "http";
-import fs from "fs";
-import path from "path";
-import process from "process";
-import { fileURLToPath } from "url";
+import http from "node:http";
+import fs from "node:fs";
+import path from "node:path";
+import process from "node:process";
+import { fileURLToPath } from "node:url";
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const { argv } = process;
@@ -93,7 +93,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
 }
 
 export default function startStaticServer(files, port, silent = false) {
-  http
+  return http
     .createServer(function (request, response) {
       const wantedFile = request.url?.substring("1");
 

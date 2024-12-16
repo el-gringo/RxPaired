@@ -1,11 +1,11 @@
-import { readFile, writeFile } from "fs";
+import { readFile, writeFile } from "node:fs";
 import {
   DeviceInitData,
   LogHistoryData,
   TokenMetadata,
   TokenType,
-} from "./active_tokens_list.js";
-import logger from "./logger.js";
+} from "./active_tokens_list.ts";
+import logger from "./logger.ts";
 
 /**
  * Class handling the optional storage on-file of persistent tokens so they can

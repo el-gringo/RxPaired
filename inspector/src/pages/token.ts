@@ -1,5 +1,5 @@
 import strHtml from "str-html";
-import { CLIENT_SCRIPT_URL, DISABLE_PASSWORD, SERVER_URL } from "../constants";
+import { CLIENT_SCRIPT_URL, DISABLE_PASSWORD } from "../constants";
 import { displayError, isTokenValid, generatePageUrl } from "../utils";
 
 /**
@@ -84,7 +84,7 @@ export default function generateTokenPage(password: string): () => void {
 
   // Refresh list of tokens
   const wsUrl =
-    password === "" ? `${SERVER_URL}/!list` : `${SERVER_URL}/${password}/!list`;
+    password === "" ? `/inspector/!list` : `/inspector/${password}/!list`;
   const socket = new WebSocket(wsUrl);
   socket.onmessage = function (evt) {
     let data;
@@ -562,8 +562,8 @@ function createPersistentToken(
 ): void {
   const wsUrl =
     password === ""
-      ? `${SERVER_URL}/!persist/${tokenId}/${expirationDelayMs}`
-      : `${SERVER_URL}/${password}/!persist/${tokenId}/${expirationDelayMs}`;
+      ? `/!persist/${tokenId}/${expirationDelayMs}`
+      : `/${password}/!persist/${tokenId}/${expirationDelayMs}`;
   const ws = new WebSocket(wsUrl);
   ws.onmessage = function (evt) {
     if (evt?.data === "ack") {

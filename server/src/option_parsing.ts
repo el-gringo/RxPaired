@@ -1,4 +1,5 @@
 import {
+  DEFAULT_STATIC_SERVER_PORT,
   DEFAULT_INSPECTOR_PORT,
   DEFAULT_DEVICE_PORT,
   DEFAULT_HISTORY_SIZE,
@@ -10,10 +11,11 @@ import {
   DEFAULT_DEVICE_MESSAGE_LIMIT,
   DEFAULT_INSPECTOR_MESSAGE_LIMIT,
   DEFAULT_LOG_FILE_PATH,
-} from "./constants.js";
-import { generatePassword } from "./utils.js";
+} from "./constants.ts";
+import { generatePassword } from "./utils.ts";
 
 export interface ParsedOptions {
+  staticServerPort: number;
   inspectorPort: number;
   devicePort: number;
   shouldCreateLogFiles: boolean;
@@ -196,6 +198,7 @@ export default function parseOptions(args: string[]): ParsedOptions {
 
   let shouldGeneratePassword = true;
   const parsed: ParsedOptions = {
+    staticServerPort: DEFAULT_STATIC_SERVER_PORT,
     inspectorPort: DEFAULT_INSPECTOR_PORT,
     devicePort: DEFAULT_DEVICE_PORT,
     shouldCreateLogFiles: false,

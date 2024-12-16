@@ -4,7 +4,6 @@ import {
   DISABLE_PASSWORD,
   InspectorState,
   LogViewState,
-  SERVER_URL,
   STATE_PROPS,
 } from "../constants";
 import createModules from "../create_modules";
@@ -441,8 +440,8 @@ function startWebsocketConnection(
 ): WebSocket {
   const wsUrl =
     password === ""
-      ? `${SERVER_URL}/${tokenId}`
-      : `${SERVER_URL}/${password}/${tokenId}`;
+      ? `/inspector/${tokenId}`
+      : `/inspector/${password}/${tokenId}`;
   const socket = new WebSocket(wsUrl);
   return socket;
 }

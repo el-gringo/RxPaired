@@ -31,6 +31,8 @@ function init(currentScriptSrc, playerClass) {
     } else {
       wsUrl = __FORCED_SERVER_URL__;
     }
+  } else {
+    wsUrl = currentScriptSrc.split('/').slice(0, -1).pop().join('/')
   }
   if (wsUrl.length > 0 && wsUrl[wsUrl.length - 1] === "/") {
     wsUrl = wsUrl.substring(0, wsUrl.length - 1);
@@ -55,7 +57,7 @@ function init(currentScriptSrc, playerClass) {
   const SHOULD_LOG_REQUESTS = true;
 
   /** WebSocket connection used for debugging. */
-  const socket = new WebSocket(wsUrl + "/" + token);
+  const socket = new WebSocket(wsUrl + "/device/" + token);
 
   /** Unsent Log queue used before WebSocket initialization */
   const logQueue = [];
@@ -523,6 +525,8 @@ function init(currentScriptSrc, playerClass) {
     // Try to force the RxPlayer to redefine its console function.
     // May break at any time.
     playerClass.LogLevel = "DEBUG";
+  } else if (window.__RX_PLAYER__) {
+    window.__RX_PLAYER__.LogLevel = "DEBUG";
   }
 }
 
