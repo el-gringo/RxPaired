@@ -10,12 +10,9 @@
   "scripts": {
     "fmt": "prettier --write .",
     "fmt:check": "prettier . --check",
-    "prepublishOnly": "cd server && npm run build",
     "start": "bun rx-paired.ts",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "npm run build --workspaces",
-    "lint": "npm run lint --workspaces",
-    "serve": "node ./utils/static_http_server.mjs --port 8695 --include-client-file --include-inspector-files & npm run serve --workspace=server -- --no-password"
+    "lint": "npm run lint --workspaces"
   },
   "repository": {
     "type": "git",

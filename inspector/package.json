@@ -2,25 +2,9 @@
   "name": "rx-paired-inspector",
   "version": "0.0.1",
   "description": "Web inspector interface for RxPaired: the lightweight, RxPlayer-oriented, remote inspector",
-  "main": "inspector.js",
-  "scripts": {
-    "build": "./build.mjs",
-    "build:min": "./build.mjs -m",
-    "build:watch": "./build.mjs -w",
-    "build:watch:min": "./build.mjs -w -m",
-    "check": "tsc --noEmit --project .",
-    "fmt": "prettier --write .",
-    "fmt:check": "prettier . --check",
-    "lint": "eslint src -c .eslintrc.js",
-    "serve": "node ../utils/static_http_server.mjs --include-inspector-files"
-  },
-  "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "6.2.1",
-    "eslint": "8.46.0",
-    "eslint-config-prettier": "^9.0.0",
-    "eslint-plugin-import": "2.28.0",
-    "eslint-plugin-jsdoc": "46.4.5"
-  },
   "author": "peaberberian",
-  "license": "MIT"
+  "license": "MIT",
+  "scripts": {
+    "check": "tsc --noEmit --project ."
+  }
 }

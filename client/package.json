@@ -9,7 +9,8 @@
     "build:watch": "./build.mjs -w",
     "build:watch:min": "./build.mjs -w -m",
     "serve": "node ../utils/static_http_server.mjs --port 8696 --include-client-file",
-    "lint": "echo \"No script lint for this package\""
+    "lint": "echo \"No script lint for this package\"",
+    "check": "tsc --noEmit --project ."
   },
   "author": "peaberberian",
   "license": "MIT"
