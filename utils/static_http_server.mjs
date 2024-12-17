@@ -17,7 +17,7 @@ import fs from "node:fs";
 export default function startStaticServer(basePath, files, port, silent = false) {
   return http
     .createServer(function (request, response) {
-      const wantedFile = request.url?.slice(basePath.length + 1);
+      const wantedFile = request.url?.slice(basePath.length).replace(/^\//, '');
       const fileObject = files[wantedFile];
       if (
         fileObject?.contentType === undefined ||

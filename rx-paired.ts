@@ -191,7 +191,9 @@ function startServer({ serverOpts, staticServerPort }) {
       const server = startStaticHttpServer(basePath, servedFiles, staticServerPort, true);
       server.on("upgrade", function upgrade(request, socket, head) {
         let { pathname } = new URL(request.url, "http://127.0.0.1");
-        pathname = pathname.slice(basePath.length);
+        if (basePath.length > 1) {
+          pathname = pathname.slice(basePath.length);
+        }
         if (!noInspector && pathname.startsWith("/inspector/")) {
           htmlInspectorSocket.handleUpgrade(
             request,
