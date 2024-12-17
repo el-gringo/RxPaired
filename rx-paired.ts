@@ -220,7 +220,7 @@ function startServer({ serverOpts, staticServerPort }) {
           );
         } else {
           console.log(
-            `To start the inspector, go to http://127.0.0.1:${staticServerPort}${basePath}/`,
+            `To start the inspector, go to http://127.0.0.1:${staticServerPort}${basePath}`,
           );
         }
       }

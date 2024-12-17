@@ -18,14 +18,7 @@ export default function startStaticServer(basePath, files, port, silent = false)
   return http
     .createServer(function (request, response) {
       const wantedFile = request.url?.slice(basePath.length + 1);
-      console.log('request.url', request.url);
-      console.log('basePath', basePath, basePath.lentgh);
-      console.log('wantedFile', wantedFile);
-
       const fileObject = files[wantedFile];
-
-      console.log('fileObject', fileObject);
-
       if (
         fileObject?.contentType === undefined ||
         fileObject.path === undefined
