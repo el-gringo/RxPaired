@@ -1,5 +1,5 @@
 import strHtml from "str-html";
-import { CLIENT_SCRIPT_URL, DISABLE_PASSWORD } from "../constants";
+import { DISABLE_PASSWORD } from "../constants";
 import { displayError, isTokenValid, generatePageUrl, getBasePath } from "../utils";
 
 /**
@@ -318,6 +318,9 @@ function generateToken(): string {
 
 function createNoTokenTutorialElement(hasPassword: boolean): HTMLElement {
   const fakeTokenStr = `!notoken${!hasPassword ? "" : "/<SERVER_PASSWORD>"}`;
+
+  const basePath = getBasePath();
+  const CLIENT_SCRIPT_URL = `${location.origin}${basePath}/client.js`;
 
   /* eslint-disable max-len */
   const liElt1 = strHtml`<li>
