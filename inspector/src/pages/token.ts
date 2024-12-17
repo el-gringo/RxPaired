@@ -1,6 +1,6 @@
 import strHtml from "str-html";
 import { CLIENT_SCRIPT_URL, DISABLE_PASSWORD } from "../constants";
-import { displayError, isTokenValid, generatePageUrl } from "../utils";
+import { displayError, isTokenValid, generatePageUrl, getBasePath } from "../utils";
 
 /**
  * Generate the HTML page asking for the wanted token.
@@ -82,9 +82,12 @@ export default function generateTokenPage(password: string): () => void {
 
   let hasAddedNoTokenTutorial = false;
 
+  const basePath = getBasePath();
+
   // Refresh list of tokens
-  const wsUrl =
-    password === "" ? `/inspector/!list` : `/inspector/${password}/!list`;
+  const wsUrl = password === ""
+    ? `${basePath}/inspector/!list`
+    : `${basePath}/inspector/${password}/!list`;
   const socket = new WebSocket(wsUrl);
   socket.onmessage = function (evt) {
     let data;

@@ -1,7 +1,6 @@
 import {
+  DEFAULT_BASE_PATH,
   DEFAULT_STATIC_SERVER_PORT,
-  DEFAULT_INSPECTOR_PORT,
-  DEFAULT_DEVICE_PORT,
   DEFAULT_HISTORY_SIZE,
   DEFAULT_MAX_TOKEN_DURATION,
   DEFAULT_MAX_LOG_LENGTH,
@@ -15,9 +14,8 @@ import {
 import { generatePassword } from "./utils.ts";
 
 export interface ParsedOptions {
+  basePath: string;
   staticServerPort: number;
-  inspectorPort: number;
-  devicePort: number;
   shouldCreateLogFiles: boolean;
   password: string | null;
   historySize: number;
@@ -35,24 +33,13 @@ export interface ParsedOptions {
 
 const optionsDescription = [
   {
-    shortForm: "cp",
-    longForm: "inspector-port",
-    argumentDescription: "port",
+    shortForm: 'b',
+    longForm: 'base-path',
+    argumentDescription: null,
     description:
-      "Port used for inspector-to-server communication.\n" +
-      "To set to `-1` to disable (in which case you may want " +
-      'to rely on "no-token" mode).\n' +
-      `Defaults to ${DEFAULT_INSPECTOR_PORT}.`,
-    outputVar: "inspectorPort",
-  },
-  {
-    shortForm: "dp",
-    longForm: "device-port",
-    argumentDescription: "port",
-    description:
-      "Port used for device-to-server communication.\n" +
-      `Defaults to ${DEFAULT_DEVICE_PORT}.`,
-    outputVar: "devicePort",
+      "Sets the base path where the application is served. Mostly usefull when used behing a reverse-proxy.\n" +
+      `Defaults to "${DEFAULT_BASE_PATH}".`,
+    outputVar: "basePath"
   },
   {
     shortForm: "f",
@@ -198,9 +185,8 @@ export default function parseOptions(args: string[]): ParsedOptions {
 
   let shouldGeneratePassword = true;
   const parsed: ParsedOptions = {
+    basePath: DEFAULT_BASE_PATH,
     staticServerPort: DEFAULT_STATIC_SERVER_PORT,
-    inspectorPort: DEFAULT_INSPECTOR_PORT,
-    devicePort: DEFAULT_DEVICE_PORT,
     shouldCreateLogFiles: false,
     password: null,
     historySize: DEFAULT_HISTORY_SIZE,
@@ -226,8 +212,6 @@ export default function parseOptions(args: string[]): ParsedOptions {
       ) {
         foundOpt = true;
         switch (opt.longForm) {
-          case "inspector-port":
-          case "device-port":
           case "history-size":
           case "max-token-duration":
           case "max-log-length":
@@ -245,9 +229,12 @@ export default function parseOptions(args: string[]): ParsedOptions {
             parsed[opt.outputVar] = true;
             break;
 
+          case "base-path":
           case "persistent-tokens-storage":
           case "log-file":
+            console.log('args[i]', args[i]);
             i++;
+            console.log('args[i]', args[i]);
             if (args[i] === undefined) {
               console.error(`Missing argument for "${arg}" option.`);
               process.exit(1);

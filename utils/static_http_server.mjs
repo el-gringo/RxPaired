@@ -12,92 +12,19 @@
 
 import http from "node:http";
 import fs from "node:fs";
-import path from "node:path";
-import process from "node:process";
-import { fileURLToPath } from "node:url";
 
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  const { argv } = process;
-  if (argv.includes("-h") || argv.includes("--help")) {
-    displayHelp();
-    process.exit(0);
-  }
 
-  // The script has been run directly
-  const currentDirName = getCurrentDirectoryName();
-
-  let httpPort = 8695;
-  let servedFiles;
-
-  let indexOfPort = argv.indexOf("-p");
-  if (indexOfPort < 0) {
-    indexOfPort = argv.indexOf("--port");
-  }
-  if (indexOfPort >= 0) {
-    if (
-      argv.length <= indexOfPort + 1 ||
-      !/^[0-9]+$/.test(argv[indexOfPort + 1])
-    ) {
-      console.error(
-        `\u001b[31mError:\u001b[0m No configured port despite a "${argv[indexOfPort]}" ` +
-          "option.\n" +
-          "You can also run this script with `--help` to have more information on " +
-          "available options.",
-      );
-      process.exit(1);
-    }
-    httpPort = +argv[indexOfPort + 1];
-  }
-
-  if (argv.includes("--include-inspector-files")) {
-    servedFiles = {
-      "index.html": {
-        path: path.join(currentDirName, "..", "inspector", "index.html"),
-        contentType: "text/html; charset=UTF-8",
-      },
-
-      // Yes, an empty string is actually a valid key!
-      "": {
-        path: path.join(currentDirName, "..", "inspector", "index.html"),
-        contentType: "text/html; charset=UTF-8",
-      },
-
-      "inspector.js": {
-        path: path.join(currentDirName, "..", "inspector", "inspector.js"),
-        contentType: "application/javascript; charset=UTF-8",
-      },
-    };
-  }
-  if (argv.includes("--include-client-file")) {
-    if (servedFiles === undefined) {
-      servedFiles = {};
-    }
-    servedFiles["client.js"] = {
-      path: path.join(currentDirName, "..", "client", "client.js"),
-      contentType: "application/javascript; charset=UTF-8",
-    };
-  }
-
-  if (servedFiles === undefined) {
-    console.error(
-      "\u001b[31mError:\u001b[0m no file served.\n" +
-        "Please call this script at least with an `--include-inspector-files` and/or " +
-        "an `--include-client-file` argument respectively to serve the inspector and client" +
-        " built files.\n" +
-        "You can also run this script with `--help` to have more information on available " +
-        "options.",
-    );
-    process.exit(1);
-  }
-  startStaticServer(servedFiles, httpPort);
-}
-
-export default function startStaticServer(files, port, silent = false) {
+export default function startStaticServer(basePath, files, port, silent = false) {
   return http
     .createServer(function (request, response) {
-      const wantedFile = request.url?.substring("1");
+      const wantedFile = request.url?.slice(basePath.length + 1);
+      console.log('request.url', request.url);
+      console.log('basePath', basePath, basePath.lentgh);
+      console.log('wantedFile', wantedFile);
 
       const fileObject = files[wantedFile];
+
+      console.log('fileObject', fileObject);
 
       if (
         fileObject?.contentType === undefined ||
@@ -155,50 +82,14 @@ export default function startStaticServer(files, port, silent = false) {
             "Access-Control-Allow-Origin": "*",
             "Content-Type": contentType,
           });
-          response.end(fileContent, "utf-8");
+          const body = fileContent.toString().replace('{{BASE_PATH}}',
+            basePath === '/'
+              ? '/'
+              : basePath + '/'
+          );
+          response.end(body, "utf-8");
         }
       });
     })
     .listen(port);
-
-  if (!silent) {
-    for (const resource of Object.keys(files)) {
-      const fileInfo = files[resource];
-      console.log(
-        `Serving \u001b[32m${fileInfo.path}\u001b[0m from route \u001b[32m/${resource}\u001b[0m`,
-      );
-    }
-  }
-
-  if (!silent) {
-    console.log(
-      `\nServer running at \u001b[32mhttp://127.0.0.1:${port}\u001b[0m`,
-    );
-    console.log("\nHit CTRL-C to stop the server");
-  }
-}
-
-/**
- * Returns the path to the directory where the current script is found.
- * @returns {String}
- */
-function getCurrentDirectoryName() {
-  return path.dirname(fileURLToPath(import.meta.url));
-}
-
-/**
- * Display through `console.log` an helping message relative to how to run this
- * script.
- */
-function displayHelp() {
-  console.log(
-    /* eslint-disable indent */
-    `Usage: node static_http_server.mjs [options]
-Options:
-  -h, --help                   Display this help
-  --include-inspector-files    Serve statically the built files of the RxPaired-inspector.
-  --include-client-file        Serve statically the built client-side script.
-  -p, --port <number>          Set a specific HTTP port for connections. 8695 by default.`,
-    /* eslint-enable indent */
-  );
 }

@@ -11,7 +11,7 @@ import ObservableState, { UPDATE_TYPE } from "../observable_state";
 import updateStateFromLog, {
   updateStatesFromLogGroup,
 } from "../update_state_from_log";
-import { displayError, generatePageUrl } from "../utils";
+import { displayError, generatePageUrl, getBasePath } from "../utils";
 import {
   createClearStoredConfigButton,
   createDarkLightModeButton,
@@ -438,10 +438,11 @@ function startWebsocketConnection(
   password: string,
   tokenId: string,
 ): WebSocket {
+  const basePath = getBasePath();
   const wsUrl =
     password === ""
-      ? `/inspector/${tokenId}`
-      : `/inspector/${password}/${tokenId}`;
+      ? `${basePath}/inspector/${tokenId}`
+      : `${basePath}/inspector/${password}/${tokenId}`;
   const socket = new WebSocket(wsUrl);
   return socket;
 }

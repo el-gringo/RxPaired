@@ -32,7 +32,7 @@ function init(currentScriptSrc, playerClass) {
       wsUrl = __FORCED_SERVER_URL__;
     }
   } else {
-    wsUrl = currentScriptSrc.split('/').slice(0, -1).pop().join('/')
+    wsUrl = currentScriptSrc.split('/').slice(0, -1).join('/');
   }
   if (wsUrl.length > 0 && wsUrl[wsUrl.length - 1] === "/") {
     wsUrl = wsUrl.substring(0, wsUrl.length - 1);

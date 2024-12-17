@@ -1,3 +1,4 @@
+export const DEFAULT_BASE_PATH = "/";
 export const DEFAULT_STATIC_SERVER_PORT = 8695;
 export const DEFAULT_INSPECTOR_PORT = 22625;
 export const DEFAULT_DEVICE_PORT = 22626;

@@ -45,11 +45,7 @@ export default async function RxPairedServer(options: ParsedOptions) {
   }
 
   const deviceSocket = new WebSocketServer({ noServer: true });
-  const htmlInspectorSocket =
-    options.inspectorPort < 0
-      ? null
-      : new WebSocketServer({ noServer: true });
-
+  const htmlInspectorSocket = new WebSocketServer({ noServer: true });
   const checkers = createCheckers(activeTokensList, {
     deviceSocket,
     htmlInspectorSocket,
@@ -67,7 +63,8 @@ export default async function RxPairedServer(options: ParsedOptions) {
       return;
     }
 
-    let tokenId = req.url.replace(/^\/device\//, '');
+    const pathname = req.url.slice(options.basePath.length);
+    let tokenId = pathname.replace(/^\/device\//, '');
     let logFileNameSuffix = tokenId;
     let existingToken: TokenMetadata;
     let existingTokenIndex: number;
@@ -269,7 +266,8 @@ export default async function RxPairedServer(options: ParsedOptions) {
         ws.close();
         return;
       }
-      const url = req.url.replace(/^\/inspector/, '');
+      const pathname = req.url.slice(options.basePath.length);
+      const url = pathname.replace(/^\/inspector/, '');
       const urlParts = parseInspectorUrl(url, options.password);
       const receivedPassword = urlParts.password ?? "";
       if (receivedPassword !== (options.password ?? "")) {

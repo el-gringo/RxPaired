@@ -186,3 +186,17 @@ export function convertToReadableBitUnit(value: number): string {
 
   return `${val.toFixed(2)} ${units[i]}`;
 }
+
+
+/**
+ * @return {string} The base path of the served page
+ */
+export function getBasePath(): string {
+  const pathname = window.location.pathname.endsWith("/")
+    ? window.location.pathname
+    : window.location.pathname + "/";
+  return pathname
+    .split("/")
+    .slice(0, -1)
+    .join("/");
+}
