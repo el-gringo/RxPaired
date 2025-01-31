@@ -1,6 +1,7 @@
 import {
   DEFAULT_BASE_PATH,
-  DEFAULT_STATIC_SERVER_PORT,
+  DEFAULT_SERVER_HOST,
+  DEFAULT_SERVER_PORT,
   DEFAULT_HISTORY_SIZE,
   DEFAULT_MAX_TOKEN_DURATION,
   DEFAULT_MAX_LOG_LENGTH,
@@ -15,7 +16,8 @@ import { generatePassword } from "./utils.ts";
 
 export interface ParsedOptions {
   basePath: string;
-  staticServerPort: number;
+  serverHost: string;
+  serverPort: number;
   shouldCreateLogFiles: boolean;
   password: string | null;
   historySize: number;
@@ -186,7 +188,8 @@ export default function parseOptions(args: string[]): ParsedOptions {
   let shouldGeneratePassword = true;
   const parsed: ParsedOptions = {
     basePath: DEFAULT_BASE_PATH,
-    staticServerPort: DEFAULT_STATIC_SERVER_PORT,
+    serverHost: DEFAULT_SERVER_HOST,
+    serverPort: DEFAULT_SERVER_PORT,
     shouldCreateLogFiles: false,
     password: null,
     historySize: DEFAULT_HISTORY_SIZE,

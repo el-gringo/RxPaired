@@ -37,6 +37,7 @@ function init(currentScriptSrc, playerClass) {
   if (wsUrl.length > 0 && wsUrl[wsUrl.length - 1] === "/") {
     wsUrl = wsUrl.substring(0, wsUrl.length - 1);
   }
+  wsUrl = wsUrl.replace(/^http/, 'ws');
 
   let token = __FORCED_TOKEN__;
   if (token === "") {

@@ -4,7 +4,6 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   DEFAULT_BASE_PATH,
-  DEFAULT_STATIC_SERVER_PORT,
   DEFAULT_HISTORY_SIZE,
   DEFAULT_MAX_TOKEN_DURATION,
   DEFAULT_MAX_LOG_LENGTH,
@@ -14,6 +13,8 @@ import {
   DEFAULT_DEVICE_MESSAGE_LIMIT,
   DEFAULT_INSPECTOR_MESSAGE_LIMIT,
   DEFAULT_LOG_FILE_PATH,
+  DEFAULT_SERVER_HOST,
+  DEFAULT_SERVER_PORT,
 } from "./server/src/constants.ts";
 import RxPairedServer from "./server/src/main.ts";
 import buildClient from "./client/build.mjs";
@@ -28,10 +29,11 @@ if (argv.includes("-h") || argv.includes("--help")) {
   process.exit(0);
 }
 
-let basePath;
-let password = null;
+let basePath: string;
+let password: string;
 let noInspector = false;
-let httpPort;
+let httpHost = DEFAULT_SERVER_HOST;
+let httpPort = DEFAULT_SERVER_PORT;
 
 for (let i = 2; i < argv.length; i++) {
   const arg = argv[i].trim();
@@ -49,10 +51,12 @@ for (let i = 2; i < argv.length; i++) {
         process.exit(1);
       }
       basePath = argv[i].replace(/\/+$/, '');
+    break;
+    case "--host":
+      httpHost = argv[++i];
       break;
-    case "--http-port":
-      i++;
-      httpPort = checkIntArg(arg, argv[i]);
+    case "--port":
+      httpPort = checkIntArg(arg, argv[++i]);
       break;
     case "--no-inspector":
       noInspector = true;
@@ -101,10 +105,11 @@ const servedFiles = {
   },
 };
 
-startRxPaired({ password, noInspector, httpPort });
+startRxPaired({ password, httpHost, httpPort, noInspector });
 
 export default function startRxPaired({
   password,
+  httpHost,
   httpPort,
   devicePort,
   inspectorPort,
@@ -128,35 +133,30 @@ export default function startRxPaired({
     disableNoToken: false,
   };
 
-  const staticServerPort = httpPort ?? DEFAULT_STATIC_SERVER_PORT;
-  const deviceDebuggerUrl = `ws://127.0.0.1:${serverOpts.devicePort}${serverOpts.basePath}/device`;
-  const deviceScriptUrl = `http://127.0.0.1:${staticServerPort}${serverOpts.basePath}/client.js`;
-  const inspectorDebuggerUrl = `ws://127.0.0.1:${serverOpts.inspectorPort}${serverOpts.basePath}`;
+  const deviceDebuggerUrl = `ws://${httpHost}:${httpPort}${serverOpts.basePath}/device`;
+  const deviceScriptUrl = `http://${httpHost}:${httpPort}${serverOpts.basePath}/client.js`;
+  const inspectorDebuggerUrl = `ws://${httpHost}:${httpPort}${serverOpts.basePath}`;
 
-  let tokenValue = null;
-  if (noInspector) {
-    if (password !== null) {
-      tokenValue = `!notoken/${password}`;
-    } else {
-      tokenValue = "!notoken";
-    }
-  }
+  let tokenValue = noInspector
+    ? password === null
+      ? '!notoken'
+      : `!notoken/${password}`
+    : null;
 
   console.log("Starting RxPaired...");
 
-  if (staticServerPort <= 0) {
+  if (httpPort <= 0) {
     return;
   }
 
   Promise.race([
-    startServer({ serverOpts, staticServerPort }),
+    startServer({ serverOpts, httpHost, httpPort }),
     noInspector
           ? Promise.resolve()
           : buildInspector({
               minify: true,
               watch: false,
               plugins: [],
-              basePath,
               deviceScriptUrl,
               inspectorDebuggerUrl,
               noPassword
@@ -183,13 +183,14 @@ export default function startRxPaired({
   ]);
 }
 
-function startServer({ serverOpts, staticServerPort }) {
+function startServer({ serverOpts, httpHost, httpPort }) {
   const { basePath } = serverOpts;
 
   RxPairedServer(serverOpts)
     .then(({ htmlInspectorSocket, deviceSocket }) => {
-      const server = startStaticHttpServer(basePath, servedFiles, staticServerPort, true);
+      const server = startStaticHttpServer(basePath, servedFiles, httpHost, httpPort, true);
       server.on("upgrade", function upgrade(request, socket, head) {
+        if (!request.url) return;
         let { pathname } = new URL(request.url, "http://127.0.0.1");
         if (basePath.length > 1) {
           pathname = pathname.slice(basePath.length);
@@ -215,14 +216,14 @@ function startServer({ serverOpts, staticServerPort }) {
       console.log("");
       console.log("RxPaired started with success!");
       const clientPath = path.join(currentDirName, "client/client.js");
-      if (staticServerPort > 0) {
+      if (httpPort > 0) {
         if (noInspector) {
           console.log(
-            `You may load the client script at http://127.0.0.1:${staticServerPort}${basePath}/client.js or find it in \`${clientPath}\`.`,
+            `You may load the client script at http://${httpHost}:${httpPort}${basePath}/client.js or find it in \`${clientPath}\`.`,
           );
         } else {
           console.log(
-            `To start the inspector, go to http://127.0.0.1:${staticServerPort}${basePath}`,
+            `To start the inspector, go to http://${httpHost}:${httpPort}${basePath}`,
           );
         }
       }
@@ -262,9 +263,12 @@ Options:
   --password <alphanumeric>      Optional password used by the server.
                                  Ignore for no password.
 
-  --http-port <port>             Port used to deliver the inspector HTTP page and the
+  --host <host>                  Hostname the server has to bind to.
+                                 Defaults to ${DEFAULT_SERVER_HOST}.
+
+  --port <port>                  Port used to deliver the inspector HTTP page and the
                                  device's script and wesocket endpoints.
-                                 Defaults to ${DEFAULT_STATIC_SERVER_PORT}.
+                                 Defaults to ${DEFAULT_SERVER_PORT}.
                                  You may set it to "-1" to disable the static server.
 
   --no-inspector                 If this option is present, we won't serve the

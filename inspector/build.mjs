@@ -15,19 +15,20 @@ const currentDirName = getCurrentDirectoryName();
  * @param {boolean|null|undefined} [options.noPassword] - If `true` the
  * password page will never be displayed.
  * @param {boolean} [options.minify] - If `true`, the output will be minified.
- * @param {boolean} [options.watch] - If `true`, the files involved
- * will be watched and the code re-built each time one of them changes.
- * @param {Array|undefined} [plugins]
+ * @param {boolean} [options.watch] - If `true`, the files involved will be
+ * watched and the code re-built each time one of them changes.
+ * @param {Array} [options.plugins] - Inspector plugins
  * @returns {Promise}
  */
 export default function buildWebInspector(options) {
   const minify = !!options.minify;
   const watch = !!options.watch;
+  const plugins = options.plugins;
   const esbuildOpts = {
     entryPoints: [path.join(currentDirName, "src", "index.ts")],
     bundle: true,
     minify,
-    plugins: options.plugins,
+    plugins,
     outfile: path.join(currentDirName, "inspector.js"),
     define: {
       _INSPECTOR_DEBUGGER_URL_: JSON.stringify(options.inspectorDebuggerUrl),

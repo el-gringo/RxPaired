@@ -14,7 +14,7 @@ import http from "node:http";
 import fs from "node:fs";
 
 
-export default function startStaticServer(basePath, files, port, silent = false) {
+export default function startStaticServer(basePath, files, host, port, silent = false) {
   return http
     .createServer(function (request, response) {
       const wantedFile = request.url?.slice(basePath.length).replace(/^\//, '');
@@ -84,5 +84,5 @@ export default function startStaticServer(basePath, files, port, silent = false)
         }
       });
     })
-    .listen(port);
+    .listen(port, host);
 }

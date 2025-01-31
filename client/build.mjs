@@ -16,8 +16,8 @@ const currentDirName = getCurrentDirectoryName();
  * @param {boolean} [options.minify] - If `true`, the output will be minified.
  * @param {boolean} [options.watch] - If `true`, the files involved
  * will be watched and the code re-built each time one of them changes.
- * @param {Array|undefined} [options.plugins]
- * @param {Array|undefined} [options.tokenValue]
+ * @param {Array} [options.plugins]
+ * @param {String|null} [options.tokenValue]
  * @returns {Promise}
  */
 export default function buildClient(options) {

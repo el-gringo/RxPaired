@@ -64,7 +64,7 @@ export default async function RxPairedServer(options: ParsedOptions) {
     }
 
     const pathname = req.url.slice(options.basePath.length);
-    let tokenId = pathname.replace(/^\/device\//, '');
+    let tokenId = pathname.replace(/^\/?device\//, '');
     let logFileNameSuffix = tokenId;
     let existingToken: TokenMetadata;
     let existingTokenIndex: number;
@@ -75,7 +75,7 @@ export default async function RxPairedServer(options: ParsedOptions) {
           writeLog(
             "warn",
             "Received inspector request with invalid password: " + pw,
-            { address: req.socket.remoteAddress },
+            { address: req.socket.remoteAddress }
           );
           ws.close();
           checkers.checkBadPasswordLimit();
@@ -102,7 +102,7 @@ export default async function RxPairedServer(options: ParsedOptions) {
         TokenType.FromDevice,
         tokenId,
         options.historySize,
-        options.maxTokenDuration,
+        options.maxTokenDuration
       );
       existingTokenIndex = activeTokensList.findIndex(tokenId);
     } else {
@@ -267,7 +267,7 @@ export default async function RxPairedServer(options: ParsedOptions) {
         return;
       }
       const pathname = req.url.slice(options.basePath.length);
-      const url = pathname.replace(/^\/inspector/, '');
+      const url = pathname.replace(/^\/?inspector/, '');
       const urlParts = parseInspectorUrl(url, options.password);
       const receivedPassword = urlParts.password ?? "";
       if (receivedPassword !== (options.password ?? "")) {
