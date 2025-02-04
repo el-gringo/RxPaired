@@ -1,6 +1,6 @@
 export const DEFAULT_BASE_PATH = "/";
 export const DEFAULT_SERVER_HOST = 'localhost';
-export const DEFAULT_SERVER_PORT = 22625;
+export const DEFAULT_SERVER_PORT = 8695;
 export const DEFAULT_HISTORY_SIZE = 0;
 export const DEFAULT_MAX_TOKEN_DURATION = 4 * 60 * 60 * 1000;
 export const DEFAULT_MAX_LOG_LENGTH = 3000;
