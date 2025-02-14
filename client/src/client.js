@@ -9,31 +9,8 @@
  */
 const __FORCED_TOKEN__ = "";
 
-/*!
- * +-------------------------------------------------------------------------+
- * | Only if you proxified RxPaired-server (for example because you used an  |
- * | HTTPS tunneling tool like localtunnel or ngrok), you can set the        |
- * | variable below to the URL of your new server.                           |
- * |                                                                         |
- * | Example: `var __FORCED_SERVER_URL__ = "https://abcdef.ngrok.app";`      |
- * +-------------------------------------------------------------------------+
- */
-const __FORCED_SERVER_URL__ = "";
-/*!
- *
- */
-
 function init(currentScriptSrc, playerClass) {
-  let wsUrl = _DEVICE_DEBUGGER_URL_;
-  if (__FORCED_SERVER_URL__ !== "") {
-    if (/^https?:\/\//i.test(__FORCED_SERVER_URL__)) {
-      wsUrl = "ws" + __FORCED_SERVER_URL__.substring(4);
-    } else {
-      wsUrl = __FORCED_SERVER_URL__;
-    }
-  } else {
-    wsUrl = currentScriptSrc.split('/').slice(0, -1).join('/');
-  }
+  wsUrl = currentScriptSrc.split('/').slice(0, -1).join('/');
   if (wsUrl.length > 0 && wsUrl[wsUrl.length - 1] === "/") {
     wsUrl = wsUrl.substring(0, wsUrl.length - 1);
   }
