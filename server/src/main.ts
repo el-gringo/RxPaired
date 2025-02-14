@@ -509,7 +509,7 @@ function sendMessageToInspector(
 }
 
 function getLogFileName(tokenId: string): string {
-  return "logs-" + new Date().toISOString() + "-" + tokenId + ".txt";
+  return "log/" + new Date().toISOString() + "-" + tokenId + ".txt";
 }
 
 interface EvalMessage {
