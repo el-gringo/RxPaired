@@ -29,7 +29,7 @@ if (argv.includes("-h") || argv.includes("--help")) {
   process.exit(0);
 }
 
-let basePath: string;
+let serverUrl: URL;
 let password: string;
 let noInspector = false;
 let httpHost = DEFAULT_SERVER_HOST;
@@ -38,20 +38,19 @@ let httpPort = DEFAULT_SERVER_PORT;
 for (let i = 2; i < argv.length; i++) {
   const arg = argv[i].trim();
   switch (arg) {
-    case "--base-path":
-      i++;
+    case "--url":
+      ++i;
       if (argv[i] === undefined) {
-        console.error(`Missing base-path argument for "--base-path" option.`);
+        console.error(`Missing url argument for "--url" option.`);
         process.exit(1);
-      } else if (!/^\//.test(argv[i])) {
+      } else if (!(serverUrl = URL.parse(argv[i]))) {
         console.error(
-          `Invalid password argument for "--base-path" option. ` +
-            `Must be only alphanumeric characters, got "${argv[i]}"`,
+          `Invalid url argument for "--url" option. ` +
+            `Must be a valid URL, got "${argv[i]}"`,
         );
         process.exit(1);
       }
-      basePath = argv[i].replace(/\/+$/, '');
-    break;
+      break;
     case "--host":
       httpHost = argv[++i];
       break;
@@ -62,7 +61,7 @@ for (let i = 2; i < argv.length; i++) {
       noInspector = true;
       break;
     case "--password":
-      i++;
+      ++i;
       if (argv[i] === undefined) {
         console.error(`Missing password argument for "--password" option.`);
         process.exit(1);
@@ -80,6 +79,10 @@ for (let i = 2; i < argv.length; i++) {
       console.error(`Unknown option: "${arg}"`);
       process.exit(1);
   }
+}
+
+if (!serverUrl) {
+  serverUrl = new URL(`http://${httpHost}:${httpPort}/`);
 }
 
 const servedFiles = {
@@ -117,7 +120,7 @@ export default function startRxPaired({
 } = {}) {
   const noPassword = typeof password !== "string" || password.length === 0;
   const serverOpts = {
-    basePath: basePath ?? DEFAULT_BASE_PATH,
+    basePath: serverUrl.pathname ?? DEFAULT_BASE_PATH,
     shouldCreateLogFiles: true,
     password: noPassword ? null : password,
     historySize: DEFAULT_HISTORY_SIZE,
@@ -133,9 +136,9 @@ export default function startRxPaired({
     disableNoToken: false,
   };
 
-  const deviceDebuggerUrl = `ws://${httpHost}:${httpPort}${serverOpts.basePath}/device`;
-  const deviceScriptUrl = `http://${httpHost}:${httpPort}${serverOpts.basePath}/client.js`;
-  const inspectorDebuggerUrl = `ws://${httpHost}:${httpPort}${serverOpts.basePath}`;
+  const deviceDebuggerUrl = `${serverUrl.toString().replace(/^http/, 'ws')}/device`;
+  const deviceScriptUrl = `${serverUrl}/client.js`;
+  const inspectorDebuggerUrl = serverUrl.toString();
 
   let tokenValue = noInspector
     ? password === null
@@ -219,11 +222,11 @@ function startServer({ serverOpts, httpHost, httpPort }) {
       if (httpPort > 0) {
         if (noInspector) {
           console.log(
-            `You may load the client script at http://${httpHost}:${httpPort}${basePath}/client.js or find it in \`${clientPath}\`.`,
+            `You may load the client script at ${deviceScriptUrl} or find it in \`${clientPath}\`.`,
           );
         } else {
           console.log(
-            `To start the inspector, go to http://${httpHost}:${httpPort}${basePath}`,
+            `To start the inspector, go to ${serverUrl}`,
           );
         }
       }
@@ -257,17 +260,16 @@ Options:
 
   -h, --help                     Display this help
 
-  --base-path <basePath>         Sets the base path to serve on.
-                                 Default to '${DEFAULT_BASE_PATH}'
+  --url <url>                    Specify the full URL the server will be deployed.
+                                 Default to 'http://${DEFAULT_SERVER_HOST}:${DEFAULT_SERVER_PORT}'
 
   --password <alphanumeric>      Optional password used by the server.
                                  Ignore for no password.
 
-  --host <host>                  Hostname the server has to bind to.
+  --host <host>                  Listening hostname the server has to bind to.
                                  Defaults to ${DEFAULT_SERVER_HOST}.
 
-  --port <port>                  Port used to deliver the inspector HTTP page and the
-                                 device's script and wesocket endpoints.
+  --port <port>                  Listening TCP port.
                                  Defaults to ${DEFAULT_SERVER_PORT}.
                                  You may set it to "-1" to disable the static server.
 
