@@ -137,7 +137,7 @@ export default function startRxPaired({
   };
 
   const deviceDebuggerUrl = `${serverUrl.toString().replace(/^http/, 'ws')}/device`;
-  const deviceScriptUrl = `${serverUrl}/client.js`;
+  const deviceScriptUrl = `${serverUrl.replace(/\/$/, '')}/client.js`;
   const inspectorDebuggerUrl = serverUrl.toString();
 
   let tokenValue = noInspector
