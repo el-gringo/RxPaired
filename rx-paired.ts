@@ -136,9 +136,9 @@ export default function startRxPaired({
     disableNoToken: false,
   };
 
-  const deviceDebuggerUrl = `${serverUrl.toString().replace(/^http/, 'ws')}/device`;
-  const deviceScriptUrl = `${serverUrl.replace(/\/$/, '')}/client.js`;
   const inspectorDebuggerUrl = serverUrl.toString();
+  const deviceDebuggerUrl = `${inspectorDebuggerUrl.replace(/^http/, 'ws')}/device`;
+  const deviceScriptUrl = `${inspectorDebuggerUrl.replace(/\/$/, '')}/client.js`;
 
   let tokenValue = noInspector
     ? password === null
