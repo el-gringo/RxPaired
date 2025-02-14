@@ -174,7 +174,6 @@ export default function startRxPaired({
       minify: true,
       watch: false,
       plugins: [],
-      deviceDebuggerUrl,
       tokenValue
     }).catch((err) => {
       console.error(

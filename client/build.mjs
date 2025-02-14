@@ -34,7 +34,6 @@ export default function buildClient(options) {
     legalComments: "inline",
     plugins: options.plugins,
     define: {
-      _DEVICE_DEBUGGER_URL_: JSON.stringify(options.deviceDebuggerUrl),
       _BUILD_TIME_TOKEN_VALUE_: JSON.stringify(options.tokenValue ?? null),
     },
   };
